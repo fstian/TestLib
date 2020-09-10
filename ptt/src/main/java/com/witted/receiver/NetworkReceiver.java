@@ -41,10 +41,8 @@ public class NetworkReceiver extends BroadcastReceiver {
                     boolean b = networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
                     boolean b1 = networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
 
-                    Timber.i(""+b);
-                    Timber.i(""+b1);
 
-                    Toast.makeText(context,""+b,Toast.LENGTH_SHORT).show();
+
                 }
 
                 @Override
