@@ -549,6 +549,7 @@ public class NettyManager {
     }
 
     public void setRegisterFail(int code, String fail) {
+        setRegisterStatus(false);
 
         mainHandler.post(() -> {
 //            for (OnConnectionListener connectListener : mConnectListeners) {
@@ -575,6 +576,7 @@ public class NettyManager {
     }
 
     public void setRegisterSuccess() {
+        setRegisterStatus(true);
         mainHandler.post(() -> {
             for (OnConnectionListener connectListener : mConnectListeners) {
                 connectListener.onRegisterSuccess();

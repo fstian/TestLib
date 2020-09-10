@@ -1,1 +1,1 @@
-include ':app', ':utils', ':ptt'
+include ':app', ':ptt'
