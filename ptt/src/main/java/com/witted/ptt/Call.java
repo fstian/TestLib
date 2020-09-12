@@ -24,6 +24,12 @@ public class Call {
     private String desIp;
     private String remoteDeviceID;
 
+    private String name;
+
+    private String age;
+
+    private String roomID;
+
 
     private String caller;
 
@@ -55,6 +61,30 @@ public class Call {
     private State state;
     private Handler mHandler;
     private CallStartRunnable mCallRunnable;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getAge() {
+        return age;
+    }
+
+    public void setAge(String age) {
+        this.age = age;
+    }
+
+    public String getRoomID() {
+        return roomID;
+    }
+
+    public void setRoomID(String roomID) {
+        this.roomID = roomID;
+    }
 
 
     public static class State {
@@ -138,7 +168,7 @@ public class Call {
     //获取通话时间
     public long getDuration(){
 
-        if(state==State.CallEnd){
+        if(state== State.CallEnd){
 
             return callEndTime-callAcceptTime;
         }

@@ -4,10 +4,10 @@ import com.witted.bean.AcceptReq;
 import com.witted.bean.BaseReq;
 import com.witted.bean.CallReq;
 import com.witted.bean.HangupReq;
-import com.witted.netty.CallConfig;
 import com.witted.constant.MsgType;
-import com.witted.remote.GeneralCallback;
+import com.witted.netty.CallConfig;
 import com.witted.netty.NettyManager;
+import com.witted.remote.GeneralCallback;
 
 import java.util.ArrayList;
 
@@ -74,14 +74,15 @@ public class CallManager {
 
 
     /**
-     *
+     * @param callerName 呼叫人的姓名 床头卡有
+     * @param age 呼叫人的年龄  床头卡有
      * @param bedName 若呼叫护士台  bedName可为空
      * @param caller  呼叫人的设备id  此设备
      * @param callee  被叫人的设备id  如果是床头卡呼叫护士台  则为"FFFFFFF"
      * @return
      *
      */
-    public Call createCall(String bedName, String caller, String callee)  {
+    public Call createCall(String callerName, String age, String bedName, String caller, String callee)  {
 
         Call call=null;
 
@@ -93,6 +94,9 @@ public class CallManager {
             call.setState(Call.State.OutGoingInit);
             call.setCallee(callee);
             call.setCaller(caller);
+            call.setName(callerName);
+            call.setAge(age);
+
             call.initCall(CallConfig.getInstance().getCodec());
 
 
@@ -103,6 +107,8 @@ public class CallManager {
             callReq.codec = CallConfig.getInstance().getCodec();
             callReq.caller = caller;
             callReq.bedID = bedName;
+            callReq.name=callerName;
+            callReq.age=age;
             callReq.callerIP = CommonUtils.getLocalIP();
             callReq.callerPort = call.getLocalPort();
             callReq.callID = call.getCallID();
@@ -131,17 +137,22 @@ public class CallManager {
         return call;
     }
 
-    public Call createIncomingCall(String ip, int port, String callId, String caller, int codec, String callee, String bedName) {
+    public Call createIncomingCall(CallReq callReq) {
+
         Call call = new Call();
-        call.setDesIp(ip);
-        call.setDesPort(port);
-        call.setCallID(callId);
-        call.setRemoteDeviceID(caller);
-        call.setCaller(caller);
-        call.setCodec(codec);
-        call.setCallee(callee);
-        call.setBedName(bedName);
+        call.setDesIp(callReq.callerIP);
+        call.setDesPort(callReq.callerPort);
+        call.setCallID(callReq.callID);
+        call.setRemoteDeviceID(callReq.caller);
+        call.setCaller(callReq.caller);
+        call.setCallee(callReq.callee);
+        call.setCodec(callReq.codec);
+        call.setBedName(callReq.bedID);
         call.setState(Call.State.IncomingReceived);
+        call.setAge(callReq.age);
+        call.setName(callReq.name);
+        call.setRoomID(callReq.roomID);
+
 
         mCalls.add(call);
 
@@ -183,7 +194,7 @@ public class CallManager {
             BaseReq<AcceptReq> answerReqBaseReq = new BaseReq<>(MsgType.CALLACCEPT, acceptReq);
 
             NettyManager.INST.sendMsg(answerReqBaseReq);
-            call.setState(Call.State.Connecting);
+            call.setState(Call.State. Connecting);
         } catch (Exception e) {
 
             //  如果音频初始化失败  挂断电话

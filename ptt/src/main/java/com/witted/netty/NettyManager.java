@@ -6,7 +6,6 @@ import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 
-
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.witted.bean.AcceptReq;
@@ -25,7 +24,6 @@ import com.witted.remote.GeneralCallback;
 import com.witted.remote.OnCallStateChangeListener;
 import com.witted.remote.OnConnectionListener;
 import com.witted.remote.OnReceiveMessageListener;
-
 
 import org.jetbrains.annotations.NotNull;
 
@@ -321,25 +319,13 @@ public class NettyManager {
 
         CallReq callReq = ((JSONObject) msg.context).toJavaObject(CallReq.class);
 
-        String callerIP = callReq.callerIP;
 
-        int callerPort = callReq.callerPort;
 
-        String callID = callReq.callID;
-
-        String caller = callReq.caller;
-
-        String callee = callReq.callee;
-
-        String bedName = callReq.bedID;
-
-        int codec = callReq.codec;
-
-        Call incomingCall = CallManager.getInstance().createIncomingCall(callerIP, callerPort, callID, caller, codec, callee, bedName);
+        Call incomingCall = CallManager.getInstance().createIncomingCall(callReq);
 
         handlerCallState(incomingCall, incomingCall.getState());
 
-        sendCallbackMsg(msg, callID);
+        sendCallbackMsg(msg, callReq.callID);
 
 
     }
