@@ -10,10 +10,6 @@ public class CallReq {
     public String callee;
     public String bedID;
 
-    public String name;
-    public String age;
-    public String roomID;
-
     public String callerIP;
 
     public  int callerPort;

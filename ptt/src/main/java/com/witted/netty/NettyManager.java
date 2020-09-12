@@ -70,7 +70,7 @@ public class NettyManager {
 
 
     /**
-     * 连接到管理主�?
+     * 连接到管理主机
      *
      * @param url
      */
@@ -192,9 +192,9 @@ public class NettyManager {
     private void doHangUpReq(BaseReq common) {
 
 
-        //当前正在通话的状�?  接通的或者打出的
+        //当前正在通话的状态   接通的或者打出的
 
-        //找到当前正在通话�?并挂�?
+        //找到当前正在通话的 并挂断
 
         ArrayList<Call> calls = CallManager.getInstance().getCalls();
 
@@ -278,7 +278,7 @@ public class NettyManager {
                 try {
                     call.startAudioCall();
                     handlerCallState(call, call.getState());
-                    //发送回复消�?
+                    //发送回复消息
                     sendAcceptBackMsg(call, common, true);
                 } catch (Exception e) {
                     sendAcceptBackMsg(call, common, false);
@@ -339,7 +339,7 @@ public class NettyManager {
 
         handlerCallState(incomingCall, incomingCall.getState());
 
-        sendCallbackMsg(msg, callReq.callID);
+        sendCallbackMsg(msg, callID);
 
 
     }
@@ -372,7 +372,7 @@ public class NettyManager {
                 } else {
                     call.setState(Call.State.CallEnd);
                     handlerCallState(call, call.getState());
-                    //服务器返回失�?释放call
+                    //服务器返回失败 释放call
                     iterator.remove();
                 }
                 break;
@@ -489,19 +489,19 @@ public class NettyManager {
         switch (msgType) {
             case 101:
                 break;
-            //有电话呼叫进�?
+            //有电话呼叫进来
             case MsgType.CALLINCOMING:
                 doCallInComing(common);
                 break;
-            //电话呼出时返�?
+            //电话呼出时返回
             case MsgType.CALLINCOMING_RESP:
                 doCallOutBack(common);
                 break;
-            //呼叫�?对方接听返回
+            //呼叫后,对方接听返回
             case MsgType.CALLACCEPT:
                 doCallAcceptReq(common);
                 break;
-            //接听电话时返�?
+            //接听电话时返回
             case MsgType.CALLACCEPT_RESP:
                 doCallAcceptResp(common);
                 break;
@@ -509,7 +509,7 @@ public class NettyManager {
             case MsgType.CALLEND:
                 doHangUpReq(common);
                 break;
-            //自己挂断电话时返�?
+            //自己挂断电话时返回
             case MsgType.CALLEND_RESP:
                 break;
             //获取设备列表回复
@@ -524,7 +524,7 @@ public class NettyManager {
 
 
 
-    //连接成功就登�?
+    //连接成功就登陆
     public void setConnectSuccess() {
 
         NettyManager.INST.login(new GeneralCallback() {

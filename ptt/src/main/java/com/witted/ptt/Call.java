@@ -24,12 +24,6 @@ public class Call {
     private String desIp;
     private String remoteDeviceID;
 
-    private String name;
-
-    private String age;
-
-    private String roomID;
-
 
     private String caller;
 
@@ -42,7 +36,7 @@ public class Call {
     }
 
     /**
-     * 接听方的id,挂断的时候需要用�?
+     * 接听方的id,挂断的时候需要用到
      */
     private String callee;
 
@@ -62,30 +56,6 @@ public class Call {
     private Handler mHandler;
     private CallStartRunnable mCallRunnable;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getAge() {
-        return age;
-    }
-
-    public void setAge(String age) {
-        this.age = age;
-    }
-
-    public String getRoomID() {
-        return roomID;
-    }
-
-    public void setRoomID(String roomID) {
-        this.roomID = roomID;
-    }
-
 
     public static class State {
 
@@ -99,7 +69,7 @@ public class Call {
         public static final State OutGoingInit = new State(0, "OutGoingInit");
 
         /**
-         * 接收端已经收到发出呼叫的消息,正在呼叫�?
+         * 接收端已经收到发出呼叫的消息,正在呼叫中
          */
         public static final State OutGoingProgress = new State(1, "OutGoingProgress");
 
@@ -107,7 +77,7 @@ public class Call {
         public static final State IncomingReceived = new State(2, "IncomingReceived");
 
         /**
-         * 接听电话�?
+         * 接听电话中
          *
          * @param state
          * @param value
@@ -126,7 +96,7 @@ public class Call {
 
 
         /**
-         * 通话�?
+         * 通话中
          */
         public static final State StreamsRunning = new State(5, "StreamsRunning");
 
@@ -347,7 +317,7 @@ public class Call {
 
 
 
-        //开启一�?0s的定时器,如果一直没有接�?就直接挂�? 或者对方挂�?
+        //开启一个60s的定时器,如果一直没有接听,就直接挂断  或者对方挂断
         if(state== State.OutGoingProgress){
 
 //            mHandler.postDelayed()
