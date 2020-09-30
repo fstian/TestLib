@@ -1,6 +1,7 @@
 package com.witted.ptt;
 
 import android.os.Handler;
+import android.util.Log;
 
 import com.witted.constant.CodeType;
 import com.witted.netty.NettyManager;
@@ -14,7 +15,7 @@ public class Call {
 
 
     private long callStartTime;
-    
+
     private long callAcceptTime;
 
     private long callEndTime;
@@ -51,8 +52,7 @@ public class Call {
     private String bedName;
 
 
-
-    private int codec ;
+    private int codec;
     private DatagramSocket mDs;
     private AudioPlay audioPlay;
     private AudioRec audioRec;
@@ -166,39 +166,42 @@ public class Call {
 
 
     //获取通话时间
-    public long getDuration(){
+    public long getDuration() {
 
-        if(state== State.CallEnd){
+        if (state == State.CallEnd) {
 
-            return callEndTime-callAcceptTime;
+            return callEndTime - callAcceptTime;
         }
 
-        if(callAcceptTime==0){
+        if (callAcceptTime == 0) {
             return -1;
         }
-        return System.currentTimeMillis()-callAcceptTime;
+        return System.currentTimeMillis() - callAcceptTime;
 
     }
 
 
+    public void removeCallRunnable() {
 
-
-    public void removeCallRunnable(){
-
-        if(mCallRunnable!=null){
+        if (mCallRunnable != null) {
             mHandler.removeCallbacks(mCallRunnable);
-            mCallRunnable=null;
+            mCallRunnable = null;
         }
 
     }
+
 
 
     public void initCall(int codec) throws Exception {
 
+        //初始化socket有异常
         mDs = initSocket();
-        audioPlay = new AudioPlay(mDs, codec);
-        audioRec = new AudioRec();
 
+        //初始化 AudioPlay 和AudioPlay有异常
+        audioPlay = new AudioPlay(mDs, codec);
+        audioPlay.setName("play");
+        audioRec = new AudioRec(mDs);
+        audioRec.setName("rec");
         mHandler = new Handler();
 
         mCallRunnable = new CallStartRunnable();
@@ -210,21 +213,18 @@ public class Call {
     public void setCodec(int code) {
         this.codec = code;
     }
+
     public int getCodec() {
-        if(codec==-1){
-            codec= CodeType.JB_G729_CODEC;
+        if (codec == -1) {
+            codec = CodeType.JB_G729_CODEC;
         }
         return codec;
     }
 
-    public DatagramSocket initSocket() {
-        try {
-            return new DatagramSocket();
-        } catch (SocketException e) {
-            Timber.e("initSocket%s", e.getMessage());
-            e.printStackTrace();
-        }
-        return null;
+    public DatagramSocket initSocket() throws SocketException {
+
+        return new DatagramSocket();
+
     }
 
 
@@ -241,18 +241,17 @@ public class Call {
      */
     public void startAudioCall() throws Exception {
 
-        if(audioRec==null||audioPlay==null){
-            throw new Exception("not initCall");
-        }
+//        if(audioRec==null||audioPlay==null){
+//            throw new Exception("not initCall");
+//        }
 
-        Timber.i("desIp%s  desPort%s code%s",desIp,desPort,codec);
+        Timber.i("desIp%s  desPort%s code%s", desIp, desPort, codec);
         audioRec.setIp(desIp);
         audioRec.setPort(desPort);
-        audioRec.setDatagramSocket(mDs);
         audioRec.setCode(codec);
         audioRec.start();
 
-        callAcceptTime=System.currentTimeMillis();
+        callAcceptTime = System.currentTimeMillis();
 
 //        audioPlay.setHandler(handler); 线程还没开始走  handler可能为空
         audioPlay.setAudioPlay(audioRec);
@@ -264,28 +263,34 @@ public class Call {
 
     }
 
-    public void release() {
+    public void removeCall() {
         CallManager.getInstance().removeCall(this);
     }
 
 
     public void stopCall() {
         setState(State.CallEnd);
-        if(audioPlay!=null){
+        if (audioPlay != null) {
             try {
+                Log.i("thread_test", "stopCall: _audioPlay");
                 audioPlay.setStart(false);
+                audioPlay.interrupt();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        if(audioRec!=null){
+        if (audioRec != null) {
+            Log.i("thread_test", "stopCall: _audioRec");
             audioRec.setAudioRecRelease();
-        }
-        callEndTime=System.currentTimeMillis();
+            audioRec.interrupt();
 
-        audioPlay=null;
-        audioRec=null;
-        release();
+        }
+        callEndTime = System.currentTimeMillis();
+
+        audioPlay = null;
+        audioRec = null;
+
+        removeCall();
     }
 
 
@@ -338,7 +343,6 @@ public class Call {
         this.bedName = bedName;
     }
 
-
     public State getState() {
         return state;
     }
@@ -346,9 +350,8 @@ public class Call {
     public void setState(State state) {
 
 
-
         //开启一个60s的定时器,如果一直没有接听,就直接挂断  或者对方挂断
-        if(state== State.OutGoingProgress){
+        if (state == State.OutGoingProgress) {
 
 //            mHandler.postDelayed()
 
@@ -356,29 +359,14 @@ public class Call {
         }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         this.state = state;
     }
 
-    class CallStartRunnable implements Runnable{
+    class CallStartRunnable implements Runnable {
         @Override
         public void run() {
             setState(State.CallEnd);
-            NettyManager.INST.handlerCallState(Call.this,getState());
+            NettyManager.INST.handlerCallState(Call.this, getState());
             stopCall();
         }
     }

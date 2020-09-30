@@ -16,12 +16,12 @@ public interface MsgType {
     /**
      * 呼叫请求
      */
-    int CALLINCOMING =2;
+    int CALLASK =2;
 
     /**
      * 呼叫应答
      */
-    int CALLINCOMING_RESP =102;
+    int CALLASK_RESP =102;
 
     /**
      * 接听请求
@@ -73,6 +73,13 @@ public interface MsgType {
     int GETONLINEDEVICE=7;
 
     int GETONLINEDEVICE_RESP=107;
+
+    /**
+     * 查询病区名字
+     */
+    int GETZONENAME=8;
+    int GETZONENAME_RESP=108;
+
 
 
 

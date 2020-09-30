@@ -32,13 +32,14 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         super.channelInactive(ctx);
-
+        Timber.i("channelInactive");
 //        NettyManager.INST.setRegisterFail("channelInactive");
 
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        Timber.i("channelActive");
 
         NettyManager.INST.setConnectSuccess();
 
@@ -56,12 +57,14 @@ public class ClientHandler extends ChannelInboundHandlerAdapter {
 
             if(registerResp.status==200){
                 NettyManager.INST.setRegisterSuccess();
+                NettyManager.INST.setHeartbeatBack(registerResp.getParams());
+            }else if(registerResp.status==201){
+                //心跳应答
+                NettyManager.INST.setHeartbeatBack(registerResp.getParams());
             }else {
                 NettyManager.INST.setRegisterFail(registerResp.status,registerResp.text);
             }
-
         }
-
         NettyManager.INST.onMsgReceive(msg);
     }
 

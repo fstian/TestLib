@@ -12,6 +12,7 @@ import com.witted.bean.AcceptReq;
 import com.witted.bean.BaseReq;
 import com.witted.bean.CallReq;
 import com.witted.bean.CommonResp;
+import com.witted.bean.DeviceParamsBean;
 import com.witted.bean.HangupReq;
 import com.witted.bean.MsgAck;
 import com.witted.bean.RegisterRequest;
@@ -30,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import timber.log.Timber;
 
@@ -73,6 +75,11 @@ public class NettyManager {
      * @param url
      */
     public void nettyConnect(String url) {
+
+//        if(getRegisterStatus()){
+//            return;
+//        }
+
         mUrl = url;
         if (!url.contains(":")) {
             return;
@@ -124,16 +131,15 @@ public class NettyManager {
 
     public void sendMsg(Object o, GeneralCallback callback) {
         BaseReq req = (BaseReq) o;
-        Timber.i("sendMsg%s", req);
 
         msgLists.put(req.msgID, new MsgAck(req, callback));
 
 //        if (INST.mNettyClient != null) {
 //            INST.mNettyClient.sendMsg(o);
 //        }
-
-        NettyClient.getInstance().sendMsg(o);
+        sendMsg(o);
     }
+
 
 
     public void sendMsg(Object o) {
@@ -157,11 +163,9 @@ public class NettyManager {
 
         INST.mainHandler = new Handler();
 
-
         //网络改变监听
 
         new NetworkReceiver(sContext, mNetworkCallback);
-
 
     }
 
@@ -231,23 +235,37 @@ public class NettyManager {
     }
 
     private void doCallAcceptResp(BaseReq common) {
-
+        Timber.i("doCallAcceptResp_common%s",common);
         //接听电话 返回
         CommonResp commonResp = ((JSONObject) common.context).toJavaObject(CommonResp.class);
         int status = commonResp.status;
         if (status == 200) {
             ArrayList<Call> calls = CallManager.getInstance().getCalls();
             for (Call call : calls) {
+                Timber.i("doCallAcceptResp_call%s",call);
                 if (commonResp.callID.equals(call.getCallID())) {
                     try {
-                        call.startAudioCall();
                         call.setState(Call.State.Connected);
                         handlerCallState(call, call.getState());
+                        call.startAudioCall();
                     } catch (Exception e) {
+                        Timber.i("doCallAcceptResp%s",e.getMessage());
                         e.printStackTrace();
                     }
                 }
             }
+        }else {
+            ArrayList<Call> calls = CallManager.getInstance().getCalls();
+            for (int i = 0; i < calls.size(); i++) {
+                Call call = calls.get(i);
+                if (commonResp.callID.equals(call.getCallID())) {
+                    call.setState(Call.State.CallEnd);
+                    handlerCallState(call, call.getState());
+                    //服务器返回失败 释放call
+                    call.stopCall();
+                }
+            }
+
         }
 
     }
@@ -259,57 +277,63 @@ public class NettyManager {
         ArrayList<Call> calls = CallManager.getInstance().getCalls();
 
         AcceptReq acceptReq = ((JSONObject) common.context).toJavaObject(AcceptReq.class);
-        for (Call call : calls) {
-            String callID = call.getCallID();
-            //callid相同 而且callstatus不等于callend
-            if (callID.equals(call.getCallID())) {
 
-                if (call.getState() == Call.State.CallEnd) {
-                    sendAcceptBackMsg(call, common, false);
-                    return;
+        if(calls==null||calls.size()==0){
+            sendAcceptBackMsg(null, common, false);
+        }else {
+            for (Call call : calls) {
+                String callID = call.getCallID();
+                //callid相同 而且callstatus不等于callend
+                if (callID.equals(call.getCallID())) {
+
+                    if (call.getState() == Call.State.CallEnd) {
+                        sendAcceptBackMsg(call, common, false);
+                        return;
+                    }
+                    call.setRemoteDeviceID(acceptReq.callee);
+                    call.setDesIp(acceptReq.calleeIP);
+                    call.setDesPort(acceptReq.calleePort);
+                    call.setState(Call.State.Connected);
+                    //开启通话线程
+                    try {
+                        call.startAudioCall();
+                        handlerCallState(call, call.getState());
+                        //发送回复消息
+                        sendAcceptBackMsg(call, common, true);
+                    } catch (Exception e) {
+                        sendAcceptBackMsg(call, common, false);
+                        e.printStackTrace();
+                    }
+                    break;
                 }
-                call.setRemoteDeviceID(acceptReq.callee);
-                call.setDesIp(acceptReq.calleeIP);
-                call.setDesPort(acceptReq.calleePort);
-                call.setState(Call.State.Connected);
-                //开启通话线程
-                try {
-                    call.startAudioCall();
-                    handlerCallState(call, call.getState());
-                    //发送回复消息
-                    sendAcceptBackMsg(call, common, true);
-                } catch (Exception e) {
-                    sendAcceptBackMsg(call, common, false);
-                    e.printStackTrace();
-                }
-                break;
             }
         }
-
-
     }
 
     private void sendAcceptBackMsg(Call call, BaseReq common, boolean success) {
-
-
         AcceptReq acceptReq = ((JSONObject) common.context).toJavaObject(AcceptReq.class);
 
-        call.setDesIp(acceptReq.calleeIP);
-        call.setDesPort(acceptReq.calleePort);
-
+        if(call!=null){
+            call.setDesIp(acceptReq.calleeIP);
+            call.setDesPort(acceptReq.calleePort);
+            call.setCallee(acceptReq.callee);
+        }
 
         CommonResp commonResp = new CommonResp();
-
         if (success) {
             commonResp.status = 200;
             commonResp.result = "ok";
         } else {
             commonResp.status = 404;
             commonResp.result = "callend";
+            if(call==null){
+                commonResp.status = 405;
+                commonResp.result = "callend";
+            }
         }
 
         commonResp.callID = acceptReq.callID;
-        call.setCallee(acceptReq.callee);
+
 
         BaseReq baseReq = new BaseReq(103, common.msgID, commonResp);
         NettyManager.INST.sendMsg(baseReq);
@@ -318,8 +342,6 @@ public class NettyManager {
     private void doCallInComing(@NotNull BaseReq msg) {
 
         CallReq callReq = ((JSONObject) msg.context).toJavaObject(CallReq.class);
-
-
 
         Call incomingCall = CallManager.getInstance().createIncomingCall(callReq);
 
@@ -334,7 +356,7 @@ public class NettyManager {
         CommonResp commonResp = new CommonResp();
         commonResp.status = 200;
         commonResp.callID = callID;
-        BaseReq<CommonResp> backMsg = new BaseReq<>(MsgType.CALLINCOMING_RESP, msg.msgID, commonResp);
+        BaseReq<CommonResp> backMsg = new BaseReq<>(MsgType.CALLASK_RESP, msg.msgID, commonResp);
         sendMsg(backMsg);
     }
 
@@ -476,18 +498,18 @@ public class NettyManager {
             case 101:
                 break;
             //有电话呼叫进来
-            case MsgType.CALLINCOMING:
+            case MsgType.CALLASK:
                 doCallInComing(common);
                 break;
             //电话呼出时返回
-            case MsgType.CALLINCOMING_RESP:
+            case MsgType.CALLASK_RESP:
                 doCallOutBack(common);
                 break;
-            //呼叫后,对方接听返回
+            //呼叫电话后,对方接听返回时 开启语音
             case MsgType.CALLACCEPT:
                 doCallAcceptReq(common);
                 break;
-            //接听电话时返回
+            //对方拨打电话,自己接听电话后,返回时
             case MsgType.CALLACCEPT_RESP:
                 doCallAcceptResp(common);
                 break;
@@ -536,6 +558,9 @@ public class NettyManager {
 
     public void setRegisterFail(int code, String fail) {
 
+        if(!getRegisterStatus()){
+            return;
+        }
         setRegisterStatus(false);
         mainHandler.post(() -> {
 //            for (OnConnectionListener connectListener : mConnectListeners) {
@@ -543,7 +568,6 @@ public class NettyManager {
 //            }
             for (int i = 0; i < mConnectListeners.size(); i++) {
                 mConnectListeners.get(i).onRegisterFail(code, fail);
-
             }
 
         });
@@ -571,6 +595,14 @@ public class NettyManager {
 
     }
 
+    public void setHeartbeatBack(List<DeviceParamsBean> registerResp){
+        mainHandler.post(() -> {
+            for (OnConnectionListener connectListener : mConnectListeners) {
+                connectListener.onHeartbeatBack(registerResp);
+            }
+        });
+    }
+
     public void login(GeneralCallback callback) {
 
         RegisterRequest registerRequest = new RegisterRequest();
@@ -590,10 +622,13 @@ public class NettyManager {
 
 
     public void getDeviceList() {
-
         BaseReq<String> request = new BaseReq<>(MsgType.GETDEVICE, getMsgId(), CallConfig.getInstance().getLocalDeviceId());
         sendMsg(request);
+    }
 
+    public void getZoneName(){
+        BaseReq<String> request = new BaseReq<>(MsgType.GETZONENAME, getMsgId(), CallConfig.getInstance().getLocalDeviceId());
+        sendMsg(request);
     }
 
     public void getOnLineDeviceList(String zoneId) {

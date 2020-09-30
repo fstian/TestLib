@@ -180,6 +180,7 @@ public class Utils {
     protected void showSound(Context context, int raw) {
         MediaPlayer mediaPlayer = null;
         mediaPlayer = MediaPlayer.create(context, raw);
+        mediaPlayer.setLooping(true);
         mediaPlayer.setVolume(0.05f, 0.05f);
         mediaPlayer.start();
     }

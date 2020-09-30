@@ -2,9 +2,6 @@ package com.witted.netty;
 
 import android.util.Log;
 
-
-import com.witted.remote.OnReceiveMessageListener;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -21,24 +18,27 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.concurrent.ScheduledFuture;
 import timber.log.Timber;
 
 public class NettyClient {
 
 
     private static NettyClient mNettyClient;
-    Bootstrap bootstrap ;
+    Bootstrap bootstrap;
     ChannelFuture mSync = null;
 
 
-
     static final String TAG = "NettyClient";
-    private  ExecutorService mExecutorService;
+    private ExecutorService mExecutorService;
+    private ChannelFuture mFuture;
+    private String mHost;
+    private int mPort;
 
 
-    public static synchronized NettyClient getInstance(){
+    public static synchronized NettyClient getInstance() {
 
-        if(mNettyClient==null){
+        if (mNettyClient == null) {
             mNettyClient = new NettyClient();
 
         }
@@ -52,17 +52,20 @@ public class NettyClient {
         initThreadPool();
     }
 
-    void initThreadPool(){
+    void initThreadPool() {
         mExecutorService = Executors.newFixedThreadPool(1);
 
     }
 
-    public  void connect(String host, int port){
+    public synchronized void connect(String host, int port) {
 
 //        mExecutorService.shutdown();
 
+        mHost = host;
+        mPort = port;
 
-        if(mExecutorService==null){
+
+        if (mExecutorService == null) {
             initThreadPool();
         }
 
@@ -71,7 +74,7 @@ public class NettyClient {
             public void run() {
                 nettyClose();
                 initNetty();
-                doConnect(host,port);
+                doConnect(host, port);
 
             }
         });
@@ -99,50 +102,60 @@ public class NettyClient {
     }
 
 
-
     private Channel channel;
 
 
     protected void doConnect(String host, int port) {
+        Timber.i("doConnect host :%s    port :%s", host, port);
         if (channel != null && channel.isActive()) {
             return;
         }
+        Timber.i("doConnect1");
 
-        ChannelFuture future = bootstrap.connect(host, port);
+        mFuture = bootstrap.connect(host, port);
 
-        future.addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture futureListener) throws Exception {
-                if (futureListener.isSuccess()) {
-                    channel = futureListener.channel();
-                    Timber.i("Connect to server successfully!");
 
-                } else {
-                    Timber.i("Failed to connect to server, try connect after 10s");
-                    futureListener.channel().eventLoop().schedule(new Runnable() {
-                        @Override
-                        public void run() {
-                            doConnect(host, port);
-                        }
-                    }, 10, TimeUnit.SECONDS);
-                }
-            }
-        });
+        mFuture.addListener(genericFutureListener);
 
 
     }
 
+    ChannelFutureListener genericFutureListener = new ChannelFutureListener() {
+        @Override
+        public void operationComplete(ChannelFuture futureListener) throws Exception {
+            if (futureListener.isSuccess()) {
+                channel = futureListener.channel();
+                Timber.i("Connect to server successfully!");
+
+            } else {
+                Timber.i("Failed to connect to server, try connect after 10s");
+                ScheduledFuture<?> schedule = futureListener.channel().eventLoop().schedule(new Runnable() {
+                    @Override
+                    public void run() {
+                        Timber.i("10s后");
+                        doConnect(mHost, mPort);
+                    }
+                }, 10, TimeUnit.SECONDS);
+            }
+        }
+    };
+
     public void nettyClose() {
+
+        if (mFuture != null) {
+            mFuture.removeListener(genericFutureListener);
+        }
 
         if (bootstrap != null) {
             bootstrap.group().shutdownGracefully();
             bootstrap = null;
         }
 
-        if (channel!= null) {
+        if (channel != null) {
             channel.close();
             channel = null;
         }
+
 
 //        if(mExecutorService!=null){
 //            mExecutorService.shutdownNow();
@@ -154,7 +167,7 @@ public class NettyClient {
 
     public void sendMsg(Object o) {
 
-        Log.i(TAG, "sendMsg: " + (mSync == null));
+        Timber.i("sendMsg_client:%s", (mSync == null));
 
         if (channel != null) {
             channel.writeAndFlush(o).addListener(new ChannelFutureListener() {

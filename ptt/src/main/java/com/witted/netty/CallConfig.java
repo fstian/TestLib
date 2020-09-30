@@ -1,11 +1,7 @@
 package com.witted.netty;
 
-import android.text.TextUtils;
-
-import com.witted.constant.CallDirect;
 import com.witted.constant.CallType;
 import com.witted.constant.CodeType;
-import com.witted.constant.DeviceType;
 
 public class CallConfig {
 
@@ -41,7 +37,8 @@ public class CallConfig {
     /**
      * 语音编码,现在默认是729
      */
-    public  int codec= CodeType.JB_G729_CODEC;
+//    public  int codec= CodeType.JB_G729_CODEC;
+    public  int codec= CodeType.JB_G711A_CODEC;
 
 
     /**
@@ -59,7 +56,7 @@ public class CallConfig {
 
     private static CallConfig instance;
 
-    public static CallConfig  getInstance(){
+    public static CallConfig getInstance(){
 
         if(instance==null){
             synchronized (CallConfig.class){

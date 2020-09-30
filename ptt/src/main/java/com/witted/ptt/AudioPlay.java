@@ -5,6 +5,7 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
 import com.witted.constant.CodeType;
 
@@ -22,8 +23,7 @@ public class AudioPlay extends Thread {
     byte[] arStatus = new byte[JB_STATUS_BUFSIZE];
 
     private final int mCode;
-    private final int mJbline;
-    private Object mObject;
+    private  int mJbline;
     private Context mContext;
     private DatagramSocket mDs;
     private boolean mStart;
@@ -44,12 +44,11 @@ public class AudioPlay extends Thread {
 
 
     private AudioRec mAudioRec;
-
+    private PlayThread mPlayThread;
 
 
     public AudioPlay(DatagramSocket datagramSocket, int code) throws Exception {
 
-        mObject = new Object();
 
         mDs = datagramSocket;
         mCode = code;
@@ -63,8 +62,8 @@ public class AudioPlay extends Thread {
 
         JitterBuffer.closeJb(0);
         mJbline = JitterBuffer.openJb(mCode, 20);
-
-        Timber.i("JitterBuffer.open%s   code%s", mJbline,code);
+//
+//        Timber.i("JitterBuffer.open%s   code%s", mJbline, code);
 //
 //        Log.i(TAG, "AudioPlay: ");
 
@@ -76,13 +75,19 @@ public class AudioPlay extends Thread {
 
         int state = mAudioTrack.getState();
 
-        if(mStart&&state!=AudioTrack.STATE_INITIALIZED){
-            throw new Exception("audioTrack 初始化失败");
 
+//        if(state != AudioTrack.STATE_INITIALIZED){
+//
+//        }
+
+        if (mStart && state != AudioTrack.STATE_INITIALIZED) {
+            throw new Exception("audioTrack 初始化失败");
         }
 
-        if(start){
-            new PlayThread().start();
+        if (start) {
+            mPlayThread = new PlayThread();
+            mPlayThread.setName("PlayThread");
+            mPlayThread.start();
         }
     }
 
@@ -117,12 +122,12 @@ public class AudioPlay extends Thread {
     @Override
     public void run() {
         DatagramPacket dp = new DatagramPacket(receiveDatas, 0, receiveDatas.length);
-        while (mStart) {
+        while (mDs!=null&&!mDs.isClosed()&&mStart) {
             try {
                 mDs.receive(dp);
                 Timber.i("receive socket%s", mCodeLength);
-                short seq = GetValueFormBytes(receiveDatas, 2, 2);
-                Timber.i("receive seq%s", seq);
+//                short seq = GetValueFormBytes(receiveDatas, 2, 2);
+//                Timber.i("receive seq%s", seq);
                 if (mCode == CodeType.JB_G729_CODEC) {
                     getSrcFromReceive(receiveDatas, m729PackageLength + rtpheader_len, datas);
                 } else {
@@ -163,7 +168,6 @@ public class AudioPlay extends Thread {
     short[] decodes = new short[160];
 
     public void setAudioPlay(AudioRec audioRec) {
-
         mAudioRec = audioRec;
     }
 
@@ -173,12 +177,10 @@ public class AudioPlay extends Thread {
 
         @Override
         public void run() {
-
-
             mAudioTrack.play();
             while (mStart) {
 
-                Timber.i("playthread mPackage %s mJbline%s code%s", mPackage,mCode,mJbline);
+                Timber.i("playthread mPackage %s mJbline%s code%s", mPackage, mJbline, mCode);
 
                 if (mJbline >= 0) {
 //                    synchronized (mObject) {
@@ -191,7 +193,7 @@ public class AudioPlay extends Thread {
 
                     }
                 }
-                Timber.i("playthread mPackage %s  code%s", mPackage,mCode);
+                Timber.i("playthread mPackage %s  code%s", mPackage, mCode);
                 switch (mCode) {
                     case CodeType.JB_G729_CODEC:
 
@@ -209,7 +211,7 @@ public class AudioPlay extends Thread {
                                 decodes[i] = alaw2linear(encodes_711[i]);
                             }
 
-                        }else {
+                        } else {
                             Arrays.fill(decodes, (short) 0);
                         }
                         break;
@@ -218,7 +220,7 @@ public class AudioPlay extends Thread {
                             for (int i = 0; i < 160; i++) {
                                 decodes[i] = ulaw2linear(encodes_711[i]);
                             }
-                        }else {
+                        } else {
                             Arrays.fill(decodes, (short) 0);
                         }
                         break;
@@ -228,16 +230,16 @@ public class AudioPlay extends Thread {
                 //发送语音包到录音线程
 
 
-                if(handler==null){
+                if (handler == null) {
                     handler = mAudioRec.getHandler();
                 }
 
-                Timber.i("handler%s",(handler==null));
+                Timber.i("handler%s", (handler == null));
 
-                Timber.i("hanler__p%s",handler);
+                Timber.i("hanler__p%s", handler);
 
 
-                if(handler !=null){
+                if (handler != null) {
                     Message obtain = Message.obtain();
                     obtain.obj = decodes;
                     handler.sendMessage(obtain);
@@ -254,6 +256,25 @@ public class AudioPlay extends Thread {
 
 
             }
+            release();
+        }
+    }
+
+    public void release() {
+
+        if (mAudioTrack != null) {
+            mAudioTrack.release();
+        }
+
+        if(mDs!=null){
+            mDs.close();
+            mDs=null;
+        }
+
+        if(mPlayThread!=null){
+            Log.i("thread_test", "release: ");
+            mPlayThread.interrupt();
+            mPlayThread=null;
         }
     }
 
