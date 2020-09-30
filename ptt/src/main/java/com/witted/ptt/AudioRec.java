@@ -14,7 +14,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 
-import androidx.annotation.NonNull;
 import timber.log.Timber;
 
 public class AudioRec extends Thread {
@@ -175,7 +174,7 @@ public class AudioRec extends Thread {
         }
 
         @Override
-        public void handleMessage(@NonNull Message msg) {
+        public void handleMessage( Message msg) {
 
             short[] speakData= (short[]) msg.obj;
 
