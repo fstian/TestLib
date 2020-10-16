@@ -368,7 +368,6 @@ public class NettyManager {
         ArrayList<Call> calls = CallManager.getInstance().getCalls();
         CommonResp commonResp = ((JSON) msg.context).toJavaObject(CommonResp.class);
 
-
         Iterator<Call> iterator = calls.iterator();
         while (iterator.hasNext()) {
             Call call = iterator.next();

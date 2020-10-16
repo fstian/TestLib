@@ -1,7 +1,6 @@
 package com.witted.bean;
 
 
-import androidx.annotation.NonNull;
 
 public class DeviceParamsBean {
 

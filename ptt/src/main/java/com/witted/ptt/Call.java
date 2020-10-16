@@ -1,7 +1,6 @@
 package com.witted.ptt;
 
 import android.os.Handler;
-import android.util.Log;
 
 import com.witted.constant.CodeType;
 import com.witted.netty.NettyManager;
@@ -272,7 +271,6 @@ public class Call {
         setState(State.CallEnd);
         if (audioPlay != null) {
             try {
-                Log.i("thread_test", "stopCall: _audioPlay");
                 audioPlay.setStart(false);
                 audioPlay.interrupt();
             } catch (Exception e) {
@@ -280,7 +278,6 @@ public class Call {
             }
         }
         if (audioRec != null) {
-            Log.i("thread_test", "stopCall: _audioRec");
             audioRec.setAudioRecRelease();
             audioRec.interrupt();
 

@@ -112,6 +112,7 @@ public class CallManager {
             callReq.callerPort = call.getLocalPort();
             callReq.callID = call.getCallID();
             callReq.callee = callee;
+            callReq.callerType= CallConfig.getInstance().getDeviceType();
 
             BaseReq baseReq = new BaseReq<>(MsgType.CALLASK,  callReq);
             Timber.i("basereq%s", baseReq);
