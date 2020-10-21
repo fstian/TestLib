@@ -138,6 +138,9 @@ public class Call {
         public static final State CallEnd = new State(20, "CallEnd");
 
 
+        public static final State CallBusy = new State(20, "CallBusy");
+
+
         public static final State Release = new State(10, "Release");
 
 
@@ -272,14 +275,12 @@ public class Call {
         if (audioPlay != null) {
             try {
                 audioPlay.setStart(false);
-                audioPlay.interrupt();
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
         if (audioRec != null) {
             audioRec.setAudioRecRelease();
-            audioRec.interrupt();
 
         }
         callEndTime = System.currentTimeMillis();

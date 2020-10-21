@@ -246,4 +246,22 @@ public class CallManager {
 
 
     }
+
+    public void clearAllCalls(){
+
+
+        //登陆失败  清除所有的通话
+
+        if (mCalls != null) {
+//            Iterator<Call> iterator = mCalls.iterator();
+//            while (iterator.hasNext()) {
+//                iterator.remove();
+//            }
+            for (int i = 0; i < mCalls.size(); i++) {
+                Call call = mCalls.get(i);
+                mCalls.remove(call);
+
+            }
+        }
+    }
 }

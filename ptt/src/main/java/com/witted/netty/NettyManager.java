@@ -17,6 +17,7 @@ import com.witted.bean.HangupReq;
 import com.witted.bean.MsgAck;
 import com.witted.bean.RegisterRequest;
 import com.witted.constant.MsgType;
+import com.witted.constant.StatusCode;
 import com.witted.ptt.Call;
 import com.witted.ptt.CallManager;
 import com.witted.ptt.CommonUtils;
@@ -224,11 +225,11 @@ public class NettyManager {
 
         HangupReq hangupReq = ((JSONObject) common.context).toJavaObject(HangupReq.class);
         CommonResp commonResp = new CommonResp();
-        commonResp.status = 200;
+        commonResp.status = StatusCode.CallNormal;
         commonResp.result = "ok";
         commonResp.callID = hangupReq.callID;
 
-        BaseReq baseReq = new BaseReq(104, common.msgID, commonResp);
+        BaseReq baseReq = new BaseReq(MsgType.CALLEND_RESP, common.msgID, commonResp);
         NettyManager.INST.sendMsg(baseReq);
 
 
@@ -321,13 +322,13 @@ public class NettyManager {
 
         CommonResp commonResp = new CommonResp();
         if (success) {
-            commonResp.status = 200;
+            commonResp.status = StatusCode.CallNormal;
             commonResp.result = "ok";
         } else {
-            commonResp.status = 404;
+            commonResp.status = StatusCode.CallEnd;
             commonResp.result = "callend";
             if(call==null){
-                commonResp.status = 405;
+                commonResp.status = StatusCode.CallEnd1;
                 commonResp.result = "callend";
             }
         }
@@ -335,7 +336,7 @@ public class NettyManager {
         commonResp.callID = acceptReq.callID;
 
 
-        BaseReq baseReq = new BaseReq(103, common.msgID, commonResp);
+        BaseReq baseReq = new BaseReq(MsgType.CALLACCEPT_RESP, common.msgID, commonResp);
         NettyManager.INST.sendMsg(baseReq);
     }
 
@@ -354,7 +355,7 @@ public class NettyManager {
 
     private void sendCallbackMsg(BaseReq msg, String callID) {
         CommonResp commonResp = new CommonResp();
-        commonResp.status = 200;
+        commonResp.status = StatusCode.CallNormal;
         commonResp.callID = callID;
         BaseReq<CommonResp> backMsg = new BaseReq<>(MsgType.CALLASK_RESP, msg.msgID, commonResp);
         sendMsg(backMsg);
@@ -373,10 +374,19 @@ public class NettyManager {
             Call call = iterator.next();
             if (call.getCallID().equals(commonResp.callID)) {
                 call.removeCallRunnable();
-                if (commonResp.status == 200) {
+                if (commonResp.status == StatusCode.CallNormal) {
                     call.setState(Call.State.OutGoingProgress);
                     handlerCallState(call, call.getState());
-                } else {
+                } else if(commonResp.status == StatusCode.CallBusy){
+
+
+                    call.setState(Call.State.CallBusy);
+                    handlerCallState(call, call.getState());
+
+                    call.setState(Call.State.CallEnd);
+                    handlerCallState(call, call.getState());
+                    iterator.remove();
+                }else {
                     call.setState(Call.State.CallEnd);
                     handlerCallState(call, call.getState());
                     //服务器返回失败 释放call
@@ -571,15 +581,17 @@ public class NettyManager {
 
         });
 
-        //登陆失败  清除所有的通话
-        ArrayList<Call> calls = CallManager.getInstance().getCalls();
+//        //登陆失败  清除所有的通话
+//        ArrayList<Call> calls = CallManager.getInstance().getCalls();
+//
+//        if (calls != null) {
+//            Iterator<Call> iterator = calls.iterator();
+//            while (iterator.hasNext()) {
+//                iterator.remove();
+//            }
+//        }
 
-        if (calls != null) {
-            Iterator<Call> iterator = calls.iterator();
-            while (iterator.hasNext()) {
-                iterator.remove();
-            }
-        }
+        CallManager.getInstance().clearAllCalls();
 
 
     }

@@ -23,7 +23,7 @@ public interface DeviceType {
     /**
      * 走廊屏
      */
-    int PASSGAE_SCREEN=6;
+    int PASSGAE_SCREEN=7;
 
     /**
      * 卫生间紧急按钮

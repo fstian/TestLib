@@ -126,6 +126,16 @@ public class AudioRec extends Thread {
 
     public void setAudioRecRelease(){
 
+        if(mHandler!=null){
+            Message obtain = Message.obtain();
+            obtain.obj =null;
+            mHandler.sendMessage(obtain);
+        }
+
+
+    }
+
+    public void release(){
         if(mAudioRecord!=null){
             mAudioRecord.release();
             mAudioRecord = null;
@@ -139,15 +149,6 @@ public class AudioRec extends Thread {
             mDs.close();
             mDs=null;
         }
-
-
-        if(mHandler!=null){
-            Message obtain = Message.obtain();
-            obtain.obj =null;
-            mHandler.sendMessage(obtain);
-        }
-
-
     }
 
 
@@ -185,12 +186,18 @@ public class AudioRec extends Thread {
                 if(looper!=null){
                     looper.quitSafely();
                 }
+                mAudioRec.release();
                 return;
             }
 
             if(mAudioRec.mAudioRecord==null){
                 return;
             }
+
+            if(mAudioRec.mAudioRecord.getState()!=AudioRecord.STATE_INITIALIZED){
+                return;
+            }
+
             try {
                 mAudioRec.mobileAec.farendBuffer(speakData, speakData.length);
                 int read = mAudioRec.mAudioRecord.read(mAudioRec.mRecordDatas, 0, mAudioRec.mRecordDatas.length);
