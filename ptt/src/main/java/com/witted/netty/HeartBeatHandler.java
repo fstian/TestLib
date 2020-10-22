@@ -37,7 +37,7 @@ public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
             IdleStateEvent event = (IdleStateEvent) evt;
             Log.i(TAG, "userEventTriggered: " + event);
             if (event.state() == IdleState.READER_IDLE) {
-                ctx.close();
+//                ctx.close();
             }
         }
     }
