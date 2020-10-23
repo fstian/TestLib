@@ -91,7 +91,7 @@ public class NettyClient {
                     protected void initChannel(SocketChannel socketChannel) {
                         ChannelPipeline pipeline = socketChannel.pipeline();
                         pipeline.addLast(new LineBasedFrameDecoder(10240));
-                        pipeline.addLast(new IdleStateHandler(NettyConfig.DEFAULT_HEARTBEAT_INTERVAL * 2, NettyConfig.DEFAULT_HEARTBEAT_INTERVAL, 0, TimeUnit.SECONDS));
+                        pipeline.addLast(new IdleStateHandler(NettyConfig.DEFAULT_HEARTBEAT_INTERVAL * 20, NettyConfig.DEFAULT_HEARTBEAT_INTERVAL, 0, TimeUnit.SECONDS));
                         pipeline.addLast(new BaseDecoder());
                         pipeline.addLast(new BaseEncoder());
                         pipeline.addLast(new HeartBeatHandler());
