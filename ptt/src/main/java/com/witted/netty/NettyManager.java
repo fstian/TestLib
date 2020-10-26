@@ -31,7 +31,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import timber.log.Timber;
@@ -369,33 +368,38 @@ public class NettyManager {
         ArrayList<Call> calls = CallManager.getInstance().getCalls();
         CommonResp commonResp = ((JSON) msg.context).toJavaObject(CommonResp.class);
 
-        Iterator<Call> iterator = calls.iterator();
-        while (iterator.hasNext()) {
-            Call call = iterator.next();
+        for (int i = 0; i < calls.size(); i++) {
+            Call call = calls.get(i);
             if (call.getCallID().equals(commonResp.callID)) {
                 call.removeCallRunnable();
                 if (commonResp.status == StatusCode.CallNormal) {
-                    call.setState(Call.State.OutGoingProgress);
-                    handlerCallState(call, call.getState());
+                    try {
+                        call.initCall(call.getCodec());
+                        call.setState(Call.State.OutGoingProgress);
+                        handlerCallState(call, call.getState());
+                    } catch (Exception e) {
+                        Timber.i("call 初始化失败%s",e.getMessage());
+                        e.printStackTrace();
+                    }
                 } else if(commonResp.status == StatusCode.CallBusy){
-
-
                     call.setState(Call.State.CallBusy);
                     handlerCallState(call, call.getState());
+//                    call.stopCall();
 
-                    call.setState(Call.State.CallEnd);
-                    handlerCallState(call, call.getState());
-                    iterator.remove();
+//                    call.setState(Call.State.CallEnd);
+//                    handlerCallState(call, call.getState());
+//                    calls.remove(call);
                 }else {
                     call.setState(Call.State.CallEnd);
                     handlerCallState(call, call.getState());
                     //服务器返回失败 释放call
-                    iterator.remove();
+                    call.stopCall();
                 }
                 break;
             }
-
         }
+
+
 
     }
 
@@ -582,16 +586,16 @@ public class NettyManager {
         });
 
 //        //登陆失败  清除所有的通话
-//        ArrayList<Call> calls = CallManager.getInstance().getCalls();
+        ArrayList<Call> calls = CallManager.getInstance().getCalls();
 //
-//        if (calls != null) {
-//            Iterator<Call> iterator = calls.iterator();
-//            while (iterator.hasNext()) {
-//                iterator.remove();
-//            }
-//        }
+        if (calls != null&&calls.size()>0) {
+            for (int i = 0; i < calls.size(); i++) {
+                Call call = calls.get(i);
+                call.setState(Call.State.CallEnd);
+                handlerCallState(call, Call.State.CallEnd);
+            }
 
-        CallManager.getInstance().clearAllCalls();
+        }
 
 
     }

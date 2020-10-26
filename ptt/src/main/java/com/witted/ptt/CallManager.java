@@ -96,7 +96,8 @@ public class CallManager {
             call.setAge(age);
 
             call.setState(Call.State.OutGoingInit);
-            call.initCall(CallConfig.getInstance().getCodec());
+            call.initSocket();
+//            call.initCall(CallConfig.getInstance().getCodec());
 
 
             //发送呼叫消息
@@ -181,6 +182,7 @@ public class CallManager {
      */
     public boolean acceptCall(Call call) {
         try {
+            call.initSocket();
             call.initCall(call.getCodec());
             AcceptReq acceptReq = new AcceptReq();
             acceptReq.callID = call.getCallID();
@@ -198,7 +200,6 @@ public class CallManager {
         } catch (Exception e) {
             //  如果音频初始化失败  挂断电话
             hangupCall(call);
-
             e.printStackTrace();
             return false;
         }

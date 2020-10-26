@@ -5,7 +5,6 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 
 import com.witted.constant.CodeType;
 
@@ -65,7 +64,6 @@ public class AudioPlay extends Thread {
 //
 //        Timber.i("JitterBuffer.open%s   code%s", mJbline, code);
 //
-//        Log.i(TAG, "AudioPlay: ");
 
     }
 
@@ -144,6 +142,9 @@ public class AudioPlay extends Thread {
                 Timber.i("ds receive exception%s", e.getMessage());
                 e.printStackTrace();
             }
+        }
+        if(mDs!=null&&!mDs.isClosed()){
+            mDs.close();
         }
         super.run();
     }
@@ -272,7 +273,6 @@ public class AudioPlay extends Thread {
         }
 
         if(mPlayThread!=null){
-            Log.i("thread_test", "release: ");
             mPlayThread.interrupt();
             mPlayThread=null;
         }

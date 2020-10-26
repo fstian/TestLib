@@ -192,21 +192,23 @@ public class Call {
 
     }
 
-
+    public void initSocket() throws SocketException {
+        mHandler = new Handler();
+        mCallRunnable = new CallStartRunnable();
+        mDs = new DatagramSocket();
+    }
 
     public void initCall(int codec) throws Exception {
 
         //初始化socket有异常
-        mDs = initSocket();
+//        mDs = initSocket();
 
-        //初始化 AudioPlay 和AudioPlay有异常
+        //初始化 AudioPlay 和AudioPlay
         audioPlay = new AudioPlay(mDs, codec);
         audioPlay.setName("play");
         audioRec = new AudioRec(mDs);
         audioRec.setName("rec");
-        mHandler = new Handler();
 
-        mCallRunnable = new CallStartRunnable();
 
 //        mHandler.postDelayed(mCallRunnable,5*1000);
 
@@ -223,11 +225,7 @@ public class Call {
         return codec;
     }
 
-    public DatagramSocket initSocket() throws SocketException {
 
-        return new DatagramSocket();
-
-    }
 
 
     public int getLocalPort() {
@@ -271,7 +269,6 @@ public class Call {
 
 
     public void stopCall() {
-        setState(State.CallEnd);
         if (audioPlay != null) {
             try {
                 audioPlay.setStart(false);
@@ -283,12 +280,20 @@ public class Call {
             audioRec.setAudioRecRelease();
 
         }
+        releaseUdp();
         callEndTime = System.currentTimeMillis();
 
         audioPlay = null;
         audioRec = null;
 
         removeCall();
+    }
+
+    public void releaseUdp(){
+        if(mDs!=null&&!mDs.isClosed()){
+            mDs.close();
+            mDs=null;
+        }
     }
 
 
