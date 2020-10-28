@@ -130,8 +130,9 @@ public class AudioRec extends Thread {
             Message obtain = Message.obtain();
             obtain.obj =null;
             mHandler.sendMessage(obtain);
+        }else {
+            release();
         }
-
 
     }
 
