@@ -206,32 +206,6 @@ public class CallManager {
 
     }
 
-    /**
-     * 如果通话状态处于活跃状态
-     *
-     * 如果没有就跳转到callfragment
-     *
-     * @return
-     * @param callID
-     */
-    public boolean callActive(String callID) {
-
-        if (mCalls == null) {
-            return false;
-        }
-        for (Call call : mCalls) {
-
-            Call.State state = call.getState();
-            if (callID!=call.getCallID()&&(state == Call.State.IncomingReceived || state == Call.State.OutGoingInit || state == Call.State.OutGoingProgress ||
-                    state == Call.State.StreamsRunning || state == Call.State.Connected || state == Call.State.Connecting)) {
-                return true;
-            }
-
-        }
-
-        return false;
-
-    }
 
     public Call findCallByCallID(String callID) {
 
@@ -249,19 +223,11 @@ public class CallManager {
     }
 
     public void clearAllCalls(){
-
-
         //登陆失败  清除所有的通话
-
         if (mCalls != null) {
-//            Iterator<Call> iterator = mCalls.iterator();
-//            while (iterator.hasNext()) {
-//                iterator.remove();
-//            }
             for (int i = 0; i < mCalls.size(); i++) {
                 Call call = mCalls.get(i);
-                mCalls.remove(call);
-
+                call.stopCall();
             }
         }
     }

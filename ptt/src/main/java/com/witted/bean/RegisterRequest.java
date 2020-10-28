@@ -10,13 +10,16 @@ public class RegisterRequest {
 
     public int expireTime;
 
+    public int callStatus;
+
     @Override
     public String toString() {
         return "RegisterRequest{" +
-                "localDeviceID='" + deviceID + '\'' +
+                "deviceID='" + deviceID + '\'' +
                 ", deviceType=" + deviceType +
                 ", localIP='" + localIP + '\'' +
                 ", expireTime=" + expireTime +
+                ", callStatus=" + callStatus +
                 '}';
     }
 }

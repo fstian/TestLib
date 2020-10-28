@@ -22,6 +22,7 @@ public class Call {
     private int desPort;
 
     private String desIp;
+
     private String remoteDeviceID;
 
     private String name;
@@ -95,15 +96,15 @@ public class Call {
         /**
          * 客户端已经初始化socket成功,获取端口发出呼叫请求    是否也需要初始化音频成功
          */
-        public static final State OutGoingInit = new State(0, "OutGoingInit");
+        public static final State OutGoingInit = new State(1, "OutGoingInit");
 
         /**
          * 接收端已经收到发出呼叫的消息,正在呼叫中
          */
-        public static final State OutGoingProgress = new State(1, "OutGoingProgress");
+        public static final State OutGoingProgress = new State(2, "OutGoingProgress");
 
 
-        public static final State IncomingReceived = new State(2, "IncomingReceived");
+        public static final State IncomingReceived = new State(3, "IncomingReceived");
 
         /**
          * 接听电话中
@@ -112,7 +113,7 @@ public class Call {
          * @param value
          */
 
-        public static final State Connecting = new State(3, "Connecting");
+        public static final State Connecting = new State(4, "Connecting");
 
         /**
          * 接听电话
@@ -121,13 +122,13 @@ public class Call {
          * @param value
          */
 
-        public static final State Connected = new State(4, "Connected");
+        public static final State Connected = new State(5, "Connected");
 
 
         /**
          * 通话中
          */
-        public static final State StreamsRunning = new State(5, "StreamsRunning");
+        public static final State StreamsRunning = new State(6, "StreamsRunning");
 
 
 //        public static final State Connected=new State(3,"Connected");
@@ -135,10 +136,10 @@ public class Call {
         /**
          * 通话结束
          */
-        public static final State CallEnd = new State(20, "CallEnd");
+        public static final State CallEnd = new State(10, "CallEnd");
 
 
-        public static final State CallBusy = new State(20, "CallBusy");
+        public static final State CallBusy = new State(11, "CallBusy");
 
 
         public static final State Release = new State(10, "Release");
