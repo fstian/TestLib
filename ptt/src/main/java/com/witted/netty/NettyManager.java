@@ -249,6 +249,8 @@ public class NettyManager {
                         handlerCallState(call, call.getState());
                         call.startAudioCall();
                     } catch (Exception e) {
+                        call.setState(Call.State.CallErr);
+                        handlerCallState(call, call.getState());
                         Timber.i("doCallAcceptResp%s",e.getMessage());
                         e.printStackTrace();
                     }
@@ -296,12 +298,18 @@ public class NettyManager {
                     call.setState(Call.State.Connected);
                     //开启通话线程
                     try {
-                        call.startAudioCall();
                         handlerCallState(call, call.getState());
                         //发送回复消息
                         sendAcceptBackMsg(call, common, true);
+                        call.initCall(call.getCodec());
+                        call.startAudioCall();
+//                        handlerCallState(call, call.getState());
+//                        //发送回复消息
+//                        sendAcceptBackMsg(call, common, true);
                     } catch (Exception e) {
-                        sendAcceptBackMsg(call, common, false);
+                        call.setState(Call.State.CallErr);
+                        handlerCallState(call, call.getState());
+//                        sendAcceptBackMsg(call, common, false);
                         e.printStackTrace();
                     }
                     break;
@@ -374,7 +382,7 @@ public class NettyManager {
                 call.removeCallRunnable();
                 if (commonResp.status == StatusCode.CallNormal) {
                     try {
-                        call.initCall(call.getCodec());
+//                        call.initCall(call.getCodec());
                         call.setState(Call.State.OutGoingProgress);
                         handlerCallState(call, call.getState());
                     } catch (Exception e) {
@@ -492,6 +500,7 @@ public class NettyManager {
 
     }
 
+    int callInCount=0;
 
     public void onMsgReceive(Object msg) {
 
@@ -512,6 +521,8 @@ public class NettyManager {
                 break;
             //有电话呼叫进来
             case MsgType.CALLASK:
+                callInCount++;
+                Timber.i("callInTest__%s",callInCount);
                 doCallInComing(common);
                 break;
             //电话呼出时返回

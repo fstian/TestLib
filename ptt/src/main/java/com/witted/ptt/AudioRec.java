@@ -125,7 +125,6 @@ public class AudioRec extends Thread {
 
 
     public void setAudioRecRelease(){
-
         if(mHandler!=null){
             Message obtain = Message.obtain();
             obtain.obj =null;
@@ -133,7 +132,6 @@ public class AudioRec extends Thread {
         }else {
             release();
         }
-
     }
 
     public void release(){

@@ -58,7 +58,6 @@ public class CallManager {
 
         if (call != null) {
             call.setState(Call.State.CallEnd);
-
             HangupReq hangupReq = new HangupReq();
             hangupReq.callID = call.getCallID();
             hangupReq.callee = call.getRemoteDeviceID();
@@ -94,6 +93,7 @@ public class CallManager {
             call.setCaller(caller);
             call.setName(callerName);
             call.setAge(age);
+            call.setCodec(CallConfig.getInstance().getCodec());
 
             call.setState(Call.State.OutGoingInit);
             call.initSocket();

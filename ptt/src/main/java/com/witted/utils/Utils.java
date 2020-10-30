@@ -109,10 +109,13 @@ public class Utils {
         int hour = 0;
         int minute = 0;
         int second = 0;
+
         if (time <= 0){
-            return "0";
+            return "00:00";
+        }else if(time>0&&time<=9){
+            return "00:0"+time;
         }else if(time<60){
-            return ""+time;
+            return "00:"+time;
         } else {
             minute = time / 60;
             if (minute < 60) {

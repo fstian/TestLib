@@ -37,8 +37,8 @@ public class CallConfig {
     /**
      * 语音编码,现在默认是729
      */
-//    public  int codec= CodeType.JB_G729_CODEC;
-    public  int codec= CodeType.JB_G711A_CODEC;
+    public  int codec= CodeType.JB_G729_CODEC;
+//    public  int codec= CodeType.JB_G711A_CODEC;
 
 
     /**

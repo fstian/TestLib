@@ -1,6 +1,7 @@
 package com.witted.ptt;
 
 import android.os.Handler;
+import android.util.Log;
 
 import com.witted.constant.CodeType;
 import com.witted.netty.NettyManager;
@@ -52,7 +53,7 @@ public class Call {
     private String bedName;
 
 
-    private int codec;
+    private int codec =-1;
     private DatagramSocket mDs;
     private AudioPlay audioPlay;
     private AudioRec audioRec;
@@ -141,8 +142,13 @@ public class Call {
 
         public static final State CallBusy = new State(11, "CallBusy");
 
+        /**
+         * 通话结束
+         */
+        public static final State CallErr = new State(12, "CallErr");
 
-        public static final State Release = new State(10, "Release");
+
+        public static final State Release = new State(66, "Release");
 
 
         public State(int state, String value) {
@@ -205,6 +211,17 @@ public class Call {
 //        mDs = initSocket();
 
         //初始化 AudioPlay 和AudioPlay
+
+        Log.e("test_audio_audioPlay",""+(audioPlay==null));
+        Log.e("test_audio_audioPlay",""+(audioRec==null));
+        if(audioPlay!=null){
+            audioPlay.release();
+            audioPlay=null;
+        }
+        if(audioRec!=null){
+            audioRec.release();
+            audioRec=null;
+        }
         audioPlay = new AudioPlay(mDs, codec);
         audioPlay.setName("play");
         audioRec = new AudioRec(mDs);

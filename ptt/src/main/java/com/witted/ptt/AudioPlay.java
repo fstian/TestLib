@@ -276,6 +276,8 @@ public class AudioPlay extends Thread {
             mPlayThread.interrupt();
             mPlayThread=null;
         }
+
+        JitterBuffer.closeJb(0);
     }
 
 
