@@ -142,9 +142,7 @@ public class Call {
 
         public static final State CallBusy = new State(11, "CallBusy");
 
-        /**
-         * 通话结束
-         */
+
         public static final State CallErr = new State(12, "CallErr");
 
 
@@ -239,6 +237,7 @@ public class Call {
     public int getCodec() {
         if (codec == -1) {
             codec = CodeType.JB_G729_CODEC;
+//            codec = CodeType.JB_G711MU_CODEC;
         }
         return codec;
     }
@@ -286,7 +285,7 @@ public class Call {
     }
 
 
-    public void stopCall() {
+     public void stopCall() {
         if (audioPlay != null) {
             try {
                 audioPlay.setStart(false);
@@ -300,10 +299,8 @@ public class Call {
         }
         releaseUdp();
         callEndTime = System.currentTimeMillis();
-
         audioPlay = null;
         audioRec = null;
-
         removeCall();
     }
 

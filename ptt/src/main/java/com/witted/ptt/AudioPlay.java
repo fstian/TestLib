@@ -59,8 +59,8 @@ public class AudioPlay extends Thread {
         }
         init();
 
-        JitterBuffer.closeJb(0);
-        mJbline = JitterBuffer.openJb(mCode, 20);
+        JitterBuffer.getInstance().closeJb(0);
+        mJbline = JitterBuffer.getInstance().openJb(mCode, 20);
 //
 //        Timber.i("JitterBuffer.open%s   code%s", mJbline, code);
 //
@@ -133,7 +133,7 @@ public class AudioPlay extends Thread {
                 }
 //                synchronized (mObject) {
 
-                int i = JitterBuffer.addPackage(mJbline, datas, mCodeLength);
+                int i = JitterBuffer.getInstance().addPackage(mJbline, datas, mCodeLength);
 //                    JitterBuffer.getStatus(mJbline, arStatus, JB_STATUS_BUFSIZE);
 //                    Timber.i("jitter1111 i%s    status%s", i, new String(arStatus));
 
@@ -186,9 +186,9 @@ public class AudioPlay extends Thread {
                 if (mJbline >= 0) {
 //                    synchronized (mObject) {
                     if (mCode == CodeType.JB_G729_CODEC) {
-                        mPackage = JitterBuffer.getPackage(mJbline, encodes_729, m729PackageLength);
+                        mPackage = JitterBuffer.getInstance().getPackage(mJbline, encodes_729, m729PackageLength);
                     } else {
-                        mPackage = JitterBuffer.getPackage(mJbline, encodes_711, m711PackageLength);
+                        mPackage = JitterBuffer.getInstance().getPackage(mJbline, encodes_711, m711PackageLength);
 //                            int status = JitterBuffer.getStatus(mPackage, arStatus, JB_STATUS_BUFSIZE);
 //                            Timber.i("playthread mPackage %s arStatus%s", mPackage, new String(arStatus));
 
@@ -277,7 +277,7 @@ public class AudioPlay extends Thread {
             mPlayThread=null;
         }
 
-        JitterBuffer.closeJb(0);
+        JitterBuffer.getInstance().closeJb(0);
     }
 
 

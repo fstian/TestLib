@@ -18,12 +18,11 @@ import timber.log.Timber;
 
 public class AudioRec extends Thread {
 
-    private  int mPort;
-    private  String mIp;
-    private  DatagramSocket mDs;
+    private int mPort;
+    private String mIp;
+    private DatagramSocket mDs;
     private MobileAEC mobileAec;
     private int mCode;
-
 
 
     private int g729pack_len = 20;
@@ -38,7 +37,7 @@ public class AudioRec extends Thread {
     private int m711PackageLength = 160;
     private int m729PackageLength = m711PackageLength / 4;
 
-    private short[] aecPcmData =new short[160];
+    private short[] aecPcmData = new short[160];
 
 
     /**
@@ -71,7 +70,7 @@ public class AudioRec extends Thread {
     private Handler mHandler;
 
 
-    public Handler getHandler(){
+    public Handler getHandler() {
 
         return mHandler;
     }
@@ -93,7 +92,6 @@ public class AudioRec extends Thread {
     }
 
 
-
     public DatagramSocket getDatagramSocket() {
         return mDs;
     }
@@ -112,44 +110,58 @@ public class AudioRec extends Thread {
         }
     }
 
+    public static AudioRec mAudioRec;
+
+    private static Object mObject = new Object();
+
+    public static AudioRec getInstance(DatagramSocket ds) {
+        synchronized (mObject) {
+            try {
+                if(mAudioRec==null){
+                    mAudioRec = new AudioRec(ds);
+                }
+            } catch (Exception e) {
+                mAudioRec=null;
+                e.printStackTrace();
+            }
+        }
+        return mAudioRec;
+    }
+
     public AudioRec(DatagramSocket ds) throws Exception {
-
-        mDs=ds;
+        mDs = ds;
         init();
-//        Timber.i("code%S  port%s ip%s",code,port,ip);
-
         mobileAec = new MobileAEC(null);
         mobileAec.setAecmMode(MobileAEC.AggressiveMode.MOST_AGGRESSIVE).prepare();
         mAudioRecord.startRecording();
     }
 
 
-    public void setAudioRecRelease(){
-        if(mHandler!=null){
+    public void setAudioRecRelease() {
+        if (mHandler != null) {
             Message obtain = Message.obtain();
-            obtain.obj =null;
+            obtain.obj = null;
             mHandler.sendMessage(obtain);
-        }else {
+        } else {
             release();
         }
     }
 
-    public void release(){
-        if(mAudioRecord!=null){
+    public void release() {
+        if (mAudioRecord != null) {
             mAudioRecord.release();
             mAudioRecord = null;
         }
 
-        if(mobileAec!=null){
+        if (mobileAec != null) {
             mobileAec.close();
         }
 
-        if(mDs!=null){
+        if (mDs != null) {
             mDs.close();
-            mDs=null;
+            mDs = null;
         }
     }
-
 
 
     @Override
@@ -159,41 +171,41 @@ public class AudioRec extends Thread {
 
         Timber.i("mAudioRecord.getState%s", state);
 
-        mHandler=new MyHandler(AudioRec.this);
+        mHandler = new MyHandler(AudioRec.this);
 
         Looper.loop();
         super.run();
     }
 
 
-    static class MyHandler extends Handler{
+    static class MyHandler extends Handler {
         AudioRec mAudioRec;
 
         public MyHandler(AudioRec audioRec) {
             WeakReference<AudioRec> audioRecWeakReference = new WeakReference<>(audioRec);
-           mAudioRec = audioRecWeakReference.get();
+            mAudioRec = audioRecWeakReference.get();
 
         }
 
         @Override
-        public void handleMessage( Message msg) {
+        public void handleMessage(Message msg) {
 
-            short[] speakData= (short[]) msg.obj;
+            short[] speakData = (short[]) msg.obj;
 
-            if(speakData==null){
+            if (speakData == null) {
                 Looper looper = Looper.myLooper();
-                if(looper!=null){
+                if (looper != null) {
                     looper.quitSafely();
                 }
                 mAudioRec.release();
                 return;
             }
 
-            if(mAudioRec.mAudioRecord==null){
+            if (mAudioRec.mAudioRecord == null) {
                 return;
             }
 
-            if(mAudioRec.mAudioRecord.getState()!=AudioRecord.STATE_INITIALIZED){
+            if (mAudioRec.mAudioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
                 return;
             }
 
@@ -201,9 +213,9 @@ public class AudioRec extends Thread {
                 mAudioRec.mobileAec.farendBuffer(speakData, speakData.length);
                 int read = mAudioRec.mAudioRecord.read(mAudioRec.mRecordDatas, 0, mAudioRec.mRecordDatas.length);
 
-                if(read>0&&mAudioRec.mDs!=null&&!mAudioRec.mDs.isClosed()){
-                    mAudioRec.mobileAec.echoCancellation(mAudioRec.mRecordDatas, null, mAudioRec.aecPcmData, (short)mAudioRec.aecPcmData.length, (short)100);
-                    encodec(mAudioRec.aecPcmData, mAudioRec.mEncodeDatas,mAudioRec.mCode);
+                if (read > 0 && mAudioRec.mDs != null && !mAudioRec.mDs.isClosed()) {
+                    mAudioRec.mobileAec.echoCancellation(mAudioRec.mRecordDatas, null, mAudioRec.aecPcmData, (short) mAudioRec.aecPcmData.length, (short) 100);
+                    encodec(mAudioRec.aecPcmData, mAudioRec.mEncodeDatas, mAudioRec.mCode);
 //                        encodec(mRecordDatas, mEncodeDatas);
                     DatagramPacket dp = new DatagramPacket(mAudioRec.mEncodeDatas, 0, mAudioRec.mEncodeDatas.length, InetAddress.getByName(mAudioRec.mIp), mAudioRec.mPort);
                     mAudioRec.mDs.send(dp);
@@ -211,13 +223,12 @@ public class AudioRec extends Thread {
 
 
             } catch (Exception e) {
-                Timber.i("audioException%s",e.getMessage());
+                Timber.i("audioException%s", e.getMessage());
                 e.printStackTrace();
             }
 
 
         }
-
 
 
         private int g711pack_len = 160;
@@ -230,17 +241,17 @@ public class AudioRec extends Thread {
         private int m711PackageLength = 160;
 
 
-        private void encodec(short[] src, byte[] dst,int code) throws Exception {
+        private void encodec(short[] src, byte[] dst, int code) throws Exception {
 
             //包装rtp头
-            packrtpheader(dst, 0, seq, timestamp, ssrc, csrc,code);
+            packrtpheader(dst, 0, seq, timestamp, ssrc, csrc, code);
             seq++;
             timestamp += m711PackageLength;
             packdata(src, 0, dst, rtpheader_len, g711pack_len, code);
         }
 
 
-        private void packdata(short[] src, int soffset, byte[] dst, int doffset, int len,int code) {
+        private void packdata(short[] src, int soffset, byte[] dst, int doffset, int len, int code) {
             int itmp;
             // pcm 转 a率
             if (code == CodeType.JB_G711A_CODEC) {
@@ -260,7 +271,7 @@ public class AudioRec extends Thread {
 
             if (code == CodeType.JB_G729_CODEC) {
 
-                len=20;
+                len = 20;
                 byte[] encodes_729 = new byte[20];
 
                 CodeUtils.LinearToG729(src, (short) 160, encodes_729);
@@ -273,7 +284,7 @@ public class AudioRec extends Thread {
         }
 
 
-        private void packrtpheader(byte[] dst, int offset, short iseq, int itimestamp, int ssrc, int icsrc,int code) {
+        private void packrtpheader(byte[] dst, int offset, short iseq, int itimestamp, int ssrc, int icsrc, int code) {
             dst[offset] = (byte) 0x80;
 
             if (code == CodeType.JB_G729_CODEC) {

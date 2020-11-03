@@ -392,7 +392,7 @@ public class NettyManager {
                 } else if(commonResp.status == StatusCode.CallBusy){
                     call.setState(Call.State.CallBusy);
                     handlerCallState(call, call.getState());
-//                    call.stopCall();
+                    call.stopCall();
 
 //                    call.setState(Call.State.CallEnd);
 //                    handlerCallState(call, call.getState());
@@ -598,14 +598,14 @@ public class NettyManager {
 
 //        //登陆失败  清除所有的通话
         ArrayList<Call> calls = CallManager.getInstance().getCalls();
-//
+
         if (calls != null&&calls.size()>0) {
-            for (int i = 0; i < calls.size(); i++) {
+            for(int i=calls.size()-1;i>=0;i--){
                 Call call = calls.get(i);
                 call.setState(Call.State.CallEnd);
                 handlerCallState(call, Call.State.CallEnd);
+                call.stopCall();
             }
-
         }
 
 

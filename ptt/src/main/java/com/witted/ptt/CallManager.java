@@ -4,6 +4,7 @@ import com.witted.bean.AcceptReq;
 import com.witted.bean.BaseReq;
 import com.witted.bean.CallReq;
 import com.witted.bean.HangupReq;
+import com.witted.constant.DeviceType;
 import com.witted.constant.MsgType;
 import com.witted.netty.CallConfig;
 import com.witted.netty.NettyManager;
@@ -36,6 +37,7 @@ public class CallManager {
 
     public Call getCurrentCall() {
 
+
         for (Call call : mCalls) {
 
             Call.State state = call.getState();
@@ -67,6 +69,10 @@ public class CallManager {
             call.stopCall();
         }
 
+        //如果是床头屏,挂断电话的时候把call都清除
+        if(CallConfig.getInstance().deviceType== DeviceType.BED_SCREEN){
+            CallManager.getInstance().clearAllCalls();
+        }
 
     }
 
@@ -208,27 +214,18 @@ public class CallManager {
 
 
     public Call findCallByCallID(String callID) {
-
-
         for (Call call : mCalls) {
-
             if(callID.equals(call.getCallID())){
                 return call;
             }
         }
-
         return null;
-
-
     }
 
     public void clearAllCalls(){
         //登陆失败  清除所有的通话
         if (mCalls != null) {
-            for (int i = 0; i < mCalls.size(); i++) {
-                Call call = mCalls.get(i);
-                call.stopCall();
-            }
+            mCalls.clear();
         }
     }
 }
