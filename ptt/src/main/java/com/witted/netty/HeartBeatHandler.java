@@ -39,9 +39,12 @@ public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
             if (calls.size() == 0) {
                 //客户端idle状态
                 registerRequest.callStatus = 0;
+                registerRequest.callID="";
             } else {
                 Call call = calls.get(0);
                 registerRequest.callStatus = call.getState().getState();
+                String callID = call.getCallID();
+                registerRequest.callID=callID;
             }
             BaseReq<RegisterRequest> request = new BaseReq<>(MsgType.REGISTER, registerRequest);
             ctx.channel().writeAndFlush(request);

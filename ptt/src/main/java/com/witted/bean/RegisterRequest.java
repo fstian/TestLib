@@ -12,6 +12,8 @@ public class RegisterRequest {
 
     public int callStatus;
 
+    public String callID;
+
     @Override
     public String toString() {
         return "RegisterRequest{" +
@@ -20,6 +22,7 @@ public class RegisterRequest {
                 ", localIP='" + localIP + '\'' +
                 ", expireTime=" + expireTime +
                 ", callStatus=" + callStatus +
+                ", callID='" + callID + '\'' +
                 '}';
     }
 }
