@@ -415,7 +415,7 @@ public class NettyManager {
 
         Timber.i("handlerCallState%s", state);
 
-        mainHandler.post(() -> {
+//        mainHandler.post(() -> {
 
             for (int i = 0; i < mOnCallStateChangeListeners.size(); i++) {
                 OnCallStateChangeListener onCallStateChangeListener = mOnCallStateChangeListeners.get(i);
@@ -426,7 +426,7 @@ public class NettyManager {
 //                Timber.i("onCallStateChangeListener%s",onCallStateChangeListener.toString());
 //                onCallStateChangeListener.callState(call, state);
 //            }
-        });
+//        });
 
     }
 
@@ -510,46 +510,48 @@ public class NettyManager {
             for (OnReceiveMessageListener onReceiveMessageListener : mOnMsgReceiveListeners) {
                 onReceiveMessageListener.onReceiveMessage(common);
             }
+
+            removeMsgCallback(common, true);
+
+            int msgType = common.msgType;
+
+            switch (msgType) {
+                case 101:
+                    break;
+                //有电话呼叫进来
+                case MsgType.CALLASK:
+                    callInCount++;
+                    Timber.i("callInTest__%s",callInCount);
+                    doCallInComing(common);
+                    break;
+                //电话呼出时返回
+                case MsgType.CALLASK_RESP:
+                    doCallOutBack(common);
+                    break;
+                //呼叫电话后,对方接听返回时 开启语音
+                case MsgType.CALLACCEPT:
+                    doCallAcceptReq(common);
+                    break;
+                //对方拨打电话,自己接听电话后,返回时
+                case MsgType.CALLACCEPT_RESP:
+                    doCallAcceptResp(common);
+                    break;
+                //对方挂断电话
+                case MsgType.CALLEND:
+                    doHangUpReq(common);
+                    break;
+                //自己挂断电话时返回
+                case MsgType.CALLEND_RESP:
+                    break;
+                //获取设备列表回复
+                case MsgType.GETDEVICE_RESP:
+                    break;
+
+                default:
+            }
         });
 
-        removeMsgCallback(common, true);
 
-        int msgType = common.msgType;
-
-        switch (msgType) {
-            case 101:
-                break;
-            //有电话呼叫进来
-            case MsgType.CALLASK:
-                callInCount++;
-                Timber.i("callInTest__%s",callInCount);
-                doCallInComing(common);
-                break;
-            //电话呼出时返回
-            case MsgType.CALLASK_RESP:
-                doCallOutBack(common);
-                break;
-            //呼叫电话后,对方接听返回时 开启语音
-            case MsgType.CALLACCEPT:
-                doCallAcceptReq(common);
-                break;
-            //对方拨打电话,自己接听电话后,返回时
-            case MsgType.CALLACCEPT_RESP:
-                doCallAcceptResp(common);
-                break;
-            //对方挂断电话
-            case MsgType.CALLEND:
-                doHangUpReq(common);
-                break;
-            //自己挂断电话时返回
-            case MsgType.CALLEND_RESP:
-                break;
-            //获取设备列表回复
-            case MsgType.GETDEVICE_RESP:
-                break;
-
-            default:
-        }
 
     }
 
