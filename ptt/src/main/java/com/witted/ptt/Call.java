@@ -113,7 +113,6 @@ public class Call {
          * @param state
          * @param value
          */
-
         public static final State Connecting = new State(4, "Connecting");
 
         /**
@@ -210,16 +209,25 @@ public class Call {
 
         //初始化 AudioPlay 和AudioPlay
 
+
         Log.e("test_audio_audioPlay",""+(audioPlay==null));
         Log.e("test_audio_audioPlay",""+(audioRec==null));
-        if(audioPlay!=null){
-            audioPlay.release();
-            audioPlay=null;
+
+        if(audioPlay!=null||audioRec!=null){
+            if(audioPlay!=null){
+                audioPlay.setStart(false);
+                audioPlay=null;
+            }
+            if(audioRec!=null){
+                audioRec.setAudioRecRelease();
+                audioRec=null;
+            }
+            Timber.e("音频未释放");
+            throw new Exception("音频未释放");
         }
-        if(audioRec!=null){
-            audioRec.release();
-            audioRec=null;
-        }
+
+
+
         audioPlay = new AudioPlay(mDs, codec);
         audioPlay.setName("play");
         audioRec = new AudioRec(mDs);
@@ -253,10 +261,12 @@ public class Call {
     }
 
 
+
+
     /**
      * 要先调用 initCall()
      */
-    public void startAudioCall() throws Exception {
+    public void startAudioCall()  {
 
 //        if(audioRec==null||audioPlay==null){
 //            throw new Exception("not initCall");
@@ -272,9 +282,14 @@ public class Call {
 
 //        audioPlay.setHandler(handler); 线程还没开始走  handler可能为空
         audioPlay.setAudioPlay(audioRec);
-        audioPlay.setStart(true);
-        audioPlay.start();
+        if (audioPlay.setStart(true)==1) {
+            CallManager.testCount++;
+            Timber.e("开始播放声音");
+            audioPlay.start();
+        }
+        Timber.e("开始播放声音1%s", CallManager.testCount);
 
+        //212
 
 //        sCall=null;
 
@@ -287,15 +302,11 @@ public class Call {
 
      public void stopCall() {
         if (audioPlay != null) {
-            try {
-                audioPlay.setStart(false);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            audioPlay.setStart(false);
         }
+
         if (audioRec != null) {
             audioRec.setAudioRecRelease();
-
         }
         releaseUdp();
         callEndTime = System.currentTimeMillis();

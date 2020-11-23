@@ -92,6 +92,12 @@ public class NettyManager {
 
     }
 
+    public void disConnectNetty() {
+
+        NettyClient.getInstance().nettyClose();
+    }
+
+
     public static String getMsgId() {
         sMsgId++;
         return CallConfig.getInstance().getLocalDeviceId() + "___" + sMsgId;
@@ -192,10 +198,7 @@ public class NettyManager {
 
     //对方挂断电话
     private void doHangUpReq(BaseReq common) {
-
-
         //当前正在通话的状态   接通的或者打出的
-
         //找到当前正在通话的 并挂断
 
         ArrayList<Call> calls = CallManager.getInstance().getCalls();
@@ -287,7 +290,6 @@ public class NettyManager {
                 String callID = call.getCallID();
                 //callid相同 而且callstatus不等于callend
                 if (callID.equals(call.getCallID())) {
-
                     if (call.getState() == Call.State.CallEnd) {
                         sendAcceptBackMsg(call, common, false);
                         return;
@@ -338,10 +340,10 @@ public class NettyManager {
                 commonResp.status = StatusCode.CallEnd1;
                 commonResp.result = "callend";
             }
+            handlerCallState(call, Call.State.CallEnd);
         }
 
         commonResp.callID = acceptReq.callID;
-
 
         BaseReq baseReq = new BaseReq(MsgType.CALLACCEPT_RESP, common.msgID, commonResp);
         NettyManager.INST.sendMsg(baseReq);
@@ -412,9 +414,7 @@ public class NettyManager {
     }
 
     public void handlerCallState(Call call, Call.State state) {
-
         Timber.i("handlerCallState%s", state);
-
 //        mainHandler.post(() -> {
 
             for (int i = 0; i < mOnCallStateChangeListeners.size(); i++) {
@@ -510,11 +510,8 @@ public class NettyManager {
             for (OnReceiveMessageListener onReceiveMessageListener : mOnMsgReceiveListeners) {
                 onReceiveMessageListener.onReceiveMessage(common);
             }
-
             removeMsgCallback(common, true);
-
             int msgType = common.msgType;
-
             switch (msgType) {
                 case 101:
                     break;
@@ -552,7 +549,6 @@ public class NettyManager {
         });
 
 
-
     }
 
 
@@ -583,7 +579,6 @@ public class NettyManager {
     }
 
     public void setRegisterFail(int code, String fail) {
-
         if(!getRegisterStatus()){
             return;
         }
@@ -597,10 +592,8 @@ public class NettyManager {
             }
 
         });
-
 //        //登陆失败  清除所有的通话
         ArrayList<Call> calls = CallManager.getInstance().getCalls();
-
         if (calls != null&&calls.size()>0) {
             for(int i=calls.size()-1;i>=0;i--){
                 Call call = calls.get(i);

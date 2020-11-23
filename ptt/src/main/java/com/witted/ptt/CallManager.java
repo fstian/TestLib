@@ -180,6 +180,7 @@ public class CallManager {
 
     }
 
+   public static int testCount=0;
 
     /**
      *
@@ -187,6 +188,23 @@ public class CallManager {
      * @return  接听电话成功 就发送接听信令等待返回就开启语音.  如果接听有异常,就挂断电话
      */
     public boolean acceptCall(Call call) {
+
+        if(call==null){
+            return false;
+        }
+
+        ArrayList<Call> calls = getCalls();
+
+        for (Call call1 : calls) {
+            Call.State state = call1.getState();
+            if(state == Call.State.Connecting|| state== Call.State.Connected){
+                return false;
+            }
+        }
+
+        if(call.getState()!= Call.State.IncomingReceived){
+            return false;
+        }
         try {
             call.initSocket();
             call.initCall(call.getCodec());
@@ -197,15 +215,15 @@ public class CallManager {
             acceptReq.calleeIP = CommonUtils.getLocalIP();
             acceptReq.calleePort = call.getLocalPort();
             acceptReq.calleeType = CallConfig.getInstance().getDeviceType();
+            call.setState(Call.State.Connecting);
 
             BaseReq<AcceptReq> answerReqBaseReq = new BaseReq<>(MsgType.CALLACCEPT, acceptReq);
             NettyManager.INST.sendMsg(answerReqBaseReq);
 
-            call.setState(Call.State.Connecting);
             return true;
         } catch (Exception e) {
-            //  如果音频初始化失败  挂断电话
             hangupCall(call);
+            Timber.e("接听挂断电话%s",e.getMessage());
             e.printStackTrace();
             return false;
         }

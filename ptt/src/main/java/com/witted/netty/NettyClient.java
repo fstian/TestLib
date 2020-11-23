@@ -34,6 +34,7 @@ public class NettyClient {
     private ChannelFuture mFuture;
     private String mHost;
     private int mPort;
+    private HeartBeatTimer mHeartBeatTimer;
 
 
     public static synchronized NettyClient getInstance() {
@@ -81,6 +82,7 @@ public class NettyClient {
     }
 
     void initNetty() {
+
         NioEventLoopGroup workGroup = new NioEventLoopGroup();
         bootstrap = new Bootstrap();
         bootstrap.group(workGroup)
@@ -125,8 +127,13 @@ public class NettyClient {
         public void operationComplete(ChannelFuture futureListener) throws Exception {
             if (futureListener.isSuccess()) {
                 channel = futureListener.channel();
-                Timber.i("Connect to server successfully!");
+                if(mHeartBeatTimer!=null){
+                    mHeartBeatTimer.cancel();
+                }
+                mHeartBeatTimer = new HeartBeatTimer();
 
+
+                Timber.i("Connect to server successfully!");
             } else {
                 Timber.i("Failed to connect to server, try connect after 10s");
                 ScheduledFuture<?> schedule = futureListener.channel().eventLoop().schedule(new Runnable() {
