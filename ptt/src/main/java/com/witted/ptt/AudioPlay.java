@@ -68,18 +68,16 @@ public class AudioPlay extends Thread {
     }
 
 
-    public void setStart(boolean start) throws Exception {
+    public int setStart(boolean start) {
         mStart = start;
-
         int state = mAudioTrack.getState();
-
-
 //        if(state != AudioTrack.STATE_INITIALIZED){
 //
 //        }
+        Timber.e("mAudioTrack.getState()%s", state);
 
         if (mStart && state != AudioTrack.STATE_INITIALIZED) {
-            throw new Exception("audioTrack 初始化失败");
+            return 0;
         }
 
         if (start) {
@@ -87,8 +85,9 @@ public class AudioPlay extends Thread {
             mPlayThread.setName("PlayThread");
             mPlayThread.start();
         }
-    }
 
+        return 1;
+    }
 
     public void init() throws Exception {
         int minBufferSize = AudioTrack.getMinBufferSize(AudioConstant.AUDIO_SIMPLERATE, AudioConstant.AUDIO_CHANNEL_CONFIG, AudioConstant.AUDIO_ENCODING);
