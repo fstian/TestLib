@@ -28,7 +28,7 @@ public interface DeviceType {
     /**
      * 卫生间紧急按钮
      */
-    int TOILET_BUTTON=4;
+    int EMERGENCY_BUTTON=4;
 
 
     /**

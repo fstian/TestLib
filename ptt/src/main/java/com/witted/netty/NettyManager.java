@@ -409,10 +409,10 @@ public class NettyManager {
             }
         }
 
-
-
     }
 
+
+    //在主线程调用
     public void handlerCallState(Call call, Call.State state) {
         Timber.i("handlerCallState%s", state);
 //        mainHandler.post(() -> {
@@ -584,24 +584,21 @@ public class NettyManager {
         }
         setRegisterStatus(false);
         mainHandler.post(() -> {
-//            for (OnConnectionListener connectListener : mConnectListeners) {
-//                connectListener.onRegisterFail(fail);
-//            }
             for (int i = 0; i < mConnectListeners.size(); i++) {
                 mConnectListeners.get(i).onRegisterFail(code, fail);
             }
+            //登陆失败  清除所有的通话
+            ArrayList<Call> calls = CallManager.getInstance().getCalls();
+            if (calls != null&&calls.size()>0) {
+                for(int i=calls.size()-1;i>=0;i--){
+                    Call call = calls.get(i);
+                    call.setState(Call.State.CallEnd);
+                    handlerCallState(call, Call.State.CallEnd);
+                    call.stopCall();
+                }
+            }
 
         });
-//        //登陆失败  清除所有的通话
-        ArrayList<Call> calls = CallManager.getInstance().getCalls();
-        if (calls != null&&calls.size()>0) {
-            for(int i=calls.size()-1;i>=0;i--){
-                Call call = calls.get(i);
-                call.setState(Call.State.CallEnd);
-                handlerCallState(call, Call.State.CallEnd);
-                call.stopCall();
-            }
-        }
 
 
     }

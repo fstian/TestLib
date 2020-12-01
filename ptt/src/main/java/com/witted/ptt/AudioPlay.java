@@ -22,11 +22,13 @@ public class AudioPlay extends Thread {
     byte[] arStatus = new byte[JB_STATUS_BUFSIZE];
 
     private final int mCode;
-    private  int mJbline;
+    private int mJbline;
     private Context mContext;
     private DatagramSocket mDs;
     private boolean mStart;
     private AudioTrack mAudioTrack;
+
+    private Object mObject = new Object();
 
 
     private boolean mStartPlay;
@@ -47,7 +49,6 @@ public class AudioPlay extends Thread {
 
 
     public AudioPlay(DatagramSocket datagramSocket, int code) throws Exception {
-
 
         mDs = datagramSocket;
         mCode = code;
@@ -89,14 +90,13 @@ public class AudioPlay extends Thread {
         return 1;
     }
 
+
     public void init() throws Exception {
         int minBufferSize = AudioTrack.getMinBufferSize(AudioConstant.AUDIO_SIMPLERATE, AudioConstant.AUDIO_CHANNEL_CONFIG, AudioConstant.AUDIO_ENCODING);
         if (minBufferSize == AudioTrack.ERROR_BAD_VALUE) {
             throw new Exception("getMinBufferSize err");
         }
         Timber.i("minBufferSize%s", minBufferSize);
-
-
         mAudioTrack = new AudioTrack(AudioManager.STREAM_MUSIC
                 , AudioConstant.AUDIO_SIMPLERATE,
                 AudioConstant.AUDIO_CHANNEL_CONFIG,
@@ -119,10 +119,10 @@ public class AudioPlay extends Thread {
     @Override
     public void run() {
         DatagramPacket dp = new DatagramPacket(receiveDatas, 0, receiveDatas.length);
-        while (mDs!=null&&!mDs.isClosed()&&mStart) {
+        while (mDs != null && !mDs.isClosed() && mStart) {
             try {
                 mDs.receive(dp);
-                Timber.i("receive socket%s", mCodeLength);
+//                Timber.i("receive socket%s", mCodeLength);
 //                short seq = GetValueFormBytes(receiveDatas, 2, 2);
 //                Timber.i("receive seq%s", seq);
                 if (mCode == CodeType.JB_G729_CODEC) {
@@ -142,7 +142,7 @@ public class AudioPlay extends Thread {
                 e.printStackTrace();
             }
         }
-        if(mDs!=null&&!mDs.isClosed()){
+        if (mDs != null && !mDs.isClosed()) {
             mDs.close();
         }
         super.run();
@@ -178,102 +178,94 @@ public class AudioPlay extends Thread {
         @Override
         public void run() {
             mAudioTrack.play();
-            while (mStart) {
+            try {
+                while (mStart) {
+//                    Timber.i("playthread mPackage %s mJbline%s code%s", mPackage, mJbline, mCode);
 
-                Timber.i("playthread mPackage %s mJbline%s code%s", mPackage, mJbline, mCode);
-
-                if (mJbline >= 0) {
-//                    synchronized (mObject) {
-                    if (mCode == CodeType.JB_G729_CODEC) {
-                        mPackage = JitterBuffer.getInstance().getPackage(mJbline, encodes_729, m729PackageLength);
-                    } else {
-                        mPackage = JitterBuffer.getInstance().getPackage(mJbline, encodes_711, m711PackageLength);
+                    if (mJbline >= 0) {
+//                        synchronized (mObject) {
+                        if (mCode == CodeType.JB_G729_CODEC) {
+                            mPackage = JitterBuffer.getInstance().getPackage(mJbline, encodes_729, m729PackageLength);
+                        } else {
+                            mPackage = JitterBuffer.getInstance().getPackage(mJbline, encodes_711, m711PackageLength);
 //                            int status = JitterBuffer.getStatus(mPackage, arStatus, JB_STATUS_BUFSIZE);
 //                            Timber.i("playthread mPackage %s arStatus%s", mPackage, new String(arStatus));
-
+                        }
+//                        }
                     }
-                }
-                Timber.i("playthread mPackage %s  code%s", mPackage, mCode);
-                switch (mCode) {
-                    case CodeType.JB_G729_CODEC:
+//                    Timber.i("playthread mPackage %s  code%s", mPackage, mCode);
+                    switch (mCode) {
+                        case CodeType.JB_G729_CODEC:
 
-
-                        if (mPackage == 20) {
-                            CodeUtils.G729ToLinear(encodes_729, (short) 20, decodes);
-                        } else {
-                            Arrays.fill(decodes, (short) 0);
-                        }
-                        break;
-                    case CodeType.JB_G711A_CODEC: //711 a
-
-                        if (mPackage == 160) {
-                            for (int i = 0; i < 160; i++) {
-                                decodes[i] = alaw2linear(encodes_711[i]);
+                            if (mPackage == 20) {
+                                CodeUtils.G729ToLinear(encodes_729, (short) 20, decodes);
+                            } else {
+                                Arrays.fill(decodes, (short) 0);
                             }
-
-                        } else {
-                            Arrays.fill(decodes, (short) 0);
-                        }
-                        break;
-                    case CodeType.JB_G711MU_CODEC:
-                        if (mPackage == 160) {
-                            for (int i = 0; i < 160; i++) {
-                                decodes[i] = ulaw2linear(encodes_711[i]);
+                            break;
+                        case CodeType.JB_G711A_CODEC: //711 a
+                            if (mPackage == 160) {
+                                for (int i = 0; i < 160; i++) {
+                                    decodes[i] = alaw2linear(encodes_711[i]);
+                                }
+                            } else {
+                                Arrays.fill(decodes, (short) 0);
                             }
-                        } else {
-                            Arrays.fill(decodes, (short) 0);
-                        }
-                        break;
-                    default:
-                }
-
-                //发送语音包到录音线程
-
-
-                if (handler == null) {
-                    handler = mAudioRec.getHandler();
-                }
-
-                Timber.i("handler%s", (handler == null));
-
-                Timber.i("hanler__p%s", handler);
-
-
-                if (handler != null) {
-                    Message obtain = Message.obtain();
-                    obtain.obj = decodes;
-                    handler.sendMessage(obtain);
-                }
-
-
-                mAudioTrack.write(decodes, 0, decodes.length);
-
+                            break;
+                        case CodeType.JB_G711MU_CODEC:
+                            if (mPackage == 160) {
+                                for (int i = 0; i < 160; i++) {
+                                    decodes[i] = ulaw2linear(encodes_711[i]);
+                                }
+                            } else {
+                                Arrays.fill(decodes, (short) 0);
+                            }
+                            break;
+                        default:
+                    }
+                    //发送语音包到录音线程
+                    if (handler == null) {
+                        handler = mAudioRec.getHandler();
+                    }
+                    if (handler != null) {
+                        Message obtain = Message.obtain();
+                        obtain.obj = decodes;
+                        handler.sendMessage(obtain);
+                    }
+                    mAudioTrack.write(decodes, 0, decodes.length);
 
 //                    }
-
 
 //                }
 
 
+                }
+                release();
+            } catch (Exception e) {
+                release();
+                Timber.e("播放线程错误%s", e.getMessage());
+
             }
-            release();
+
+
         }
     }
 
     public void release() {
 
         if (mAudioTrack != null) {
+            mAudioTrack.stop();
             mAudioTrack.release();
         }
 
-        if(mDs!=null){
+        if (mDs != null) {
             mDs.close();
-            mDs=null;
+            mDs = null;
         }
 
-        if(mPlayThread!=null){
+        if (mPlayThread != null) {
             mPlayThread.interrupt();
-            mPlayThread=null;
+            mPlayThread = null;
         }
 
         JitterBuffer.getInstance().closeJb(0);

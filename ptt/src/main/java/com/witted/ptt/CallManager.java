@@ -159,7 +159,8 @@ public class CallManager {
         call.setAge(callReq.age);
         call.setName(callReq.name);
         call.setRoomID(callReq.roomID);
-
+        call.setCallType(callReq.callType);
+        call.setCallerType(callReq.callerType);
 
         mCalls.add(call);
 

@@ -14,6 +14,11 @@ import timber.log.Timber;
 public class Call {
 
 
+
+    public  int callType;
+
+    public int callerType;
+
     private long callStartTime;
 
     private long callAcceptTime;
@@ -32,16 +37,8 @@ public class Call {
 
     private String roomID;
 
-
     private String caller;
 
-    public String getCaller() {
-        return caller;
-    }
-
-    public void setCaller(String caller) {
-        this.caller = caller;
-    }
 
     /**
      * 接听方的id,挂断的时候需要用到
@@ -170,6 +167,30 @@ public class Call {
         }
     }
 
+    public String getCaller() {
+        return caller;
+    }
+
+    public void setCaller(String caller) {
+        this.caller = caller;
+    }
+
+    public int getCallType() {
+        return callType;
+    }
+
+    public void setCallType(int callType) {
+        this.callType = callType;
+    }
+
+    public int getCallerType() {
+        return callerType;
+    }
+
+    public void setCallerType(int callerType) {
+        this.callerType = callerType;
+    }
+
 
     //获取通话时间
     public long getDuration() {
@@ -215,7 +236,7 @@ public class Call {
 
         if(audioPlay!=null||audioRec!=null){
             if(audioPlay!=null){
-                audioPlay. setStart(false);
+                audioPlay.setStart(false);
                 audioPlay=null;
             }
             if(audioRec!=null){

@@ -67,6 +67,9 @@ public interface MsgType {
      */
 
 
+
+
+
     /**
      * 获取在线设备列表
      */
@@ -79,10 +82,6 @@ public interface MsgType {
      */
     int GETZONENAME=8;
     int GETZONENAME_RESP=108;
-
-
-
-
 
 
 
