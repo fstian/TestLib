@@ -3,6 +3,7 @@ package com.witted.netty;
 import com.witted.bean.BaseReq;
 import com.witted.bean.RegisterRequest;
 import com.witted.constant.MsgType;
+import com.witted.constant.StatusCode;
 import com.witted.ptt.Call;
 import com.witted.ptt.CallManager;
 import com.witted.ptt.CommonUtils;
@@ -15,6 +16,7 @@ import timber.log.Timber;
 
 public class HeartBeatTimer {
 
+    int count =0;
 
     private final Timer mTimer;
 
@@ -28,6 +30,14 @@ public class HeartBeatTimer {
         @Override
         public void run() {
             Timber.i("mTimerTask");
+            if(!NettyManager.INST.getRegisterStatus()){
+                count++;
+            }else {
+                count=0;
+            }
+            if(count>0&&count%6==0){
+                NettyManager.INST.setRegisterFail(StatusCode.TCP_CONNECT_REGISTER_FAILED,"定时失败回调");
+            }
             if (NettyManager.INST.getRegisterStatus()) {
                 RegisterRequest registerRequest = new RegisterRequest();
                 registerRequest.deviceID = CallConfig.getInstance().getLocalDeviceId();

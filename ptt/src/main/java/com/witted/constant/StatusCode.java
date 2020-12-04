@@ -4,6 +4,7 @@ public interface StatusCode {
 
     int SERVICE_DIED=-1001;
     int TCP_CONNECT_ERR=1;
+    int TCP_CONNECT_REGISTER_FAILED=2;
 
 
     int CallNormal=200;

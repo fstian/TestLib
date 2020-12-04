@@ -82,6 +82,7 @@ public class NettyManager {
 
         mUrl = url;
         if (!url.contains(":")) {
+            Log.e(TAG, "nettyConnect: "+"url格式错误");
             return;
         }
         String[] split = url.split(":");
@@ -579,7 +580,7 @@ public class NettyManager {
     }
 
     public void setRegisterFail(int code, String fail) {
-        if(!getRegisterStatus()){
+        if(!getRegisterStatus()&&code!= StatusCode.TCP_CONNECT_REGISTER_FAILED){
             return;
         }
         setRegisterStatus(false);
